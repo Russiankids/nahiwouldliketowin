@@ -483,220 +483,6 @@ class AudioManager {
     }
 }
 
-class UIManager {
-    constructor(app) {
-        this.app = app;
-        this.dom = {
-            playButton: document.getElementById('play-button'),
-            overlay: document.getElementById('overlay'),
-            addFileButton: document.getElementById('addFileButton'),
-            micButton: document.getElementById('micButton'),
-            recordButton: document.getElementById('recordButton'),
-            downloadLink: document.getElementById('downloadLink'),
-            fullscreenButton: document.getElementById('fullscreenButton'),
-            logoutButton: document.getElementById('logoutButton'),
-            audioFileInput: document.getElementById('audioFileInput'),
-            imageFileInput: document.getElementById('imageFileInput'),
-            modeSelector: document.getElementById('mode-selector'),
-            modeSettings: document.getElementById('mode-settings'),
-            beatThresholdSlider: document.getElementById('beatThresholdSlider'),
-            beatThresholdValue: document.getElementById('beatThresholdValue'),
-            beatColorPicker: document.getElementById('beatColorPicker'),
-        };
-        this.modeSettingsHTML = {
-            circular: `<details open><summary>Circular Settings</summary><div class="control-group-grid">
-                <div class="control-group"><label for="barCountSlider">Bar Count: <span id="barCountValue">256</span></label><input type="range" id="barCountSlider" min="64" max="512" value="256" step="2"></div>
-                <div class="control-group"><label for="radiusSlider">Base Radius: <span id="radiusValue">100</span></label><input type="range" id="radiusSlider" min="50" max="300" value="100"></div>
-                <div class="control-group"><label for="lineWidthSlider">Line Width: <span id="lineWidthValue">3</span></label><input type="range" id="lineWidthSlider" min="1" max="10" value="3"></div>
-                <div class="control-group"><label for="lineColorPicker">Line Color:</label><input type="color" id="lineColorPicker" value="#00ffff"></div>
-            </div></details>`,
-            linear: `<details open><summary>Linear Settings</summary><div class="control-group-grid">
-                <div class="control-group"><label for="barCountSlider">Bar Count: <span id="barCountValue">256</span></label><input type="range" id="barCountSlider" min="64" max="512" value="256" step="2"></div>
-                <div class="control-group"><label for="barHeightSlider">Min Bar Height: <span id="barHeightValue">2</span></label><input type="range" id="barHeightSlider" min="1" max="20" value="2"></div>
-                <div class="control-group"><label for="barSpacingSlider">Bar Spacing: <span id="barSpacingValue">1</span></label><input type="range" id="barSpacingSlider" min="0" max="10" value="1"></div>
-                <div class="control-group"><label for="barColorPicker">Bar Color:</label><input type="color" id="barColorPicker" value="#00ff88"></div>
-            </div></details>`,
-            particle: `<details open><summary>Particle Settings</summary><div class="control-group-grid">
-                <div class="control-group"><label for="particleCountSlider">Particle Count: <span id="particleCountValue">400</span></label><input type="range" id="particleCountSlider" min="50" max="1000" value="400"></div>
-                <div class="control-group"><label for="particleSizeSlider">Particle Size: <span id="particleSizeValue">3</span></label><input type="range" id="particleSizeSlider" min="1" max="10" value="3"></div>
-                <div class="control-group"><label for="particleColorPicker">Particle Color:</label><input type="color" id="particleColorPicker" value="#00ffff"></div>
-            </div></details>`,
-            waveform: `<details open><summary>Waveform Settings</summary><div class="control-group-grid">
-                <div class="control-group"><label for="waveformThicknessSlider">Line Thickness: <span id="waveformThicknessValue">3</span></label><input type="range" id="waveformThicknessSlider" min="1" max="10" value="3"></div>
-                <div class="control-group"><label for="waveformColorPicker">Waveform Color:</label><input type="color" id="waveformColorPicker" value="#00ff00"></div>
-            </div></details>`,
-            galaxy: `<details open><summary>Galaxy Settings</summary><div class="control-group-grid">
-                <div class="control-group"><label for="particleCountSlider">Star Count: <span id="particleCountValue">600</span></label><input type="range" id="particleCountSlider" min="100" max="2000" value="600"></div>
-                <div class="control-group"><label for="particleSizeSlider">Star Size: <span id="particleSizeValue">2</span></label><input type="range" id="particleSizeSlider" min="0.5" max="5" value="2" step="0.1"></div>
-                <div class="control-group"><label for="rotationSpeedSlider">Rotation Speed: <span id="rotationSpeedValue">0.15</span></label><input type="range" id="rotationSpeedSlider" min="0" max="1" value="0.15" step="0.01"></div>
-            </div></details>`,
-            threeD: `<details open><summary>3D Settings</summary><div class="control-group-grid">
-                <div class="control-group"><label for="barCountSlider">Bar Count: <span id="barCountValue">128</span></label><input type="range" id="barCountSlider" min="32" max="256" value="128" step="2"></div>
-                <div class="control-group"><label for="threeDCameraZSlider">Camera Distance: <span id="threeDCameraZValue">500</span></label><input type="range" id="threeDCameraZSlider" min="100" max="1000" value="500"></div>
-                <div class="control-group"><label for="threeDBarDepthSlider">Bar Depth: <span id="threeDBarDepthValue">50</span></label><input type="range" id="threeDBarDepthSlider" min="10" max="100" value="50"></div>
-                <div class="control-group"><label for="threeDRotationSpeedSlider">Auto-Rotate: <span id="threeDRotationSpeedValue">1</span></label><input type="range" id="threeDRotationSpeedSlider" min="0" max="10" value="1" step="0.1"></div>
-                <div class="control-group"><label for="threeDBarColorPicker">Bar Color:</label><input type="color" id="threeDBarColorPicker" value="#ff00ff"></div>
-            </div></details>`,
-            reflected: `<details open><summary>Reflected Settings</summary><div class="control-group-grid">
-                <div class="control-group"><label for="barCountSlider">Bar Count: <span id="barCountValue">256</span></label><input type="range" id="barCountSlider" min="64" max="512" value="256" step="2"></div>
-                <div class="control-group"><label for="barHeightSlider">Min Bar Height: <span id="barHeightValue">2</span></label><input type="range" id="barHeightSlider" min="1" max="20" value="2"></div>
-                <div class="control-group"><label for="barSpacingSlider">Bar Spacing: <span id="barSpacingValue">1</span></label><input type="range" id="barSpacingSlider" min="0" max="10" value="1"></div>
-                <div class="control-group"><label for="barColorPicker">Bar Color:</label><input type="color" id="barColorPicker" value="#ff6600"></div>
-            </div></details>`,
-            flower: `<details open><summary>Flower Settings</summary><div class="control-group-grid">
-                <div class="control-group"><label for="petalCountSlider">Petal Count: <span id="petalCountValue">16</span></label><input type="range" id="petalCountSlider" min="4" max="48" value="16" step="2"></div>
-                <div class="control-group"><label for="radiusSlider">Base Radius: <span id="radiusValue">80</span></label><input type="range" id="radiusSlider" min="20" max="200" value="80"></div>
-                <div class="control-group"><label for="lineWidthSlider">Line Width: <span id="lineWidthValue">2</span></label><input type="range" id="lineWidthSlider" min="1" max="10" value="2"></div>
-                <div class="control-group"><label for="petalColorPicker">Petal Color:</label><input type="color" id="petalColorPicker" value="#ff80ff"></div>
-            </div></details>`,
-            radial: `<details open><summary>Radial Burst Settings</summary><div class="control-group-grid">
-                <div class="control-group"><label for="rayCountSlider">Ray Count: <span id="rayCountValue">360</span></label><input type="range" id="rayCountSlider" min="180" max="720" value="360" step="10"></div>
-                <div class="control-group"><label for="innerRadiusSlider">Inner Radius: <span id="innerRadiusValue">30</span></label><input type="range" id="innerRadiusSlider" min="10" max="100" value="30"></div>
-                <div class="control-group"><label for="radialColorPicker">Ray Color:</label><input type="color" id="radialColorPicker" value="#ffff00"></div>
-            </div></details>`,
-            dna: `<details open><summary>DNA Helix Settings</summary><div class="control-group-grid">
-                <div class="control-group"><label for="segmentCountSlider">Segments: <span id="segmentCountValue">100</span></label><input type="range" id="segmentCountSlider" min="50" max="200" value="100"></div>
-                <div class="control-group"><label for="helixRadiusSlider">Helix Radius: <span id="helixRadiusValue">80</span></label><input type="range" id="helixRadiusSlider" min="30" max="150" value="80"></div>
-                <div class="control-group"><label for="dnaColorPicker">Strand Color:</label><input type="color" id="dnaColorPicker" value="#00ffaa"></div>
-            </div></details>`,
-            imageJumper: `<details open><summary>Image Jumper Settings</summary><div class="control-group-grid">
-                <div class="control-group"><label for="imageUploadButton">Upload Image:</label><button id="imageUploadButton" class="button">Select Image</button></div>
-                <div class="control-group"><label for="imageSizeSlider">Image Size: <span id="imageSizeValue">150</span></label><input type="range" id="imageSizeSlider" min="50" max="400" value="150"></div>
-                <div class="control-group"><label for="jumpIntensitySlider">Jump Intensity: <span id="jumpIntensityValue">80</span></label><input type="range" id="jumpIntensitySlider" min="10" max="200" value="80"></div>
-                <div class="control-group"><label for="rotationSpeedSlider">Rotation Speed: <span id="rotationSpeedValue">0.5</span></label><input type="range" id="rotationSpeedSlider" min="0" max="2" value="0.5" step="0.1"></div>
-            </div></details>`,
-            imageScreensaver: `<details open><summary>Image Screensaver Settings</summary><div class="control-group-grid">
-                <div class="control-group"><label for="imageUploadButton2">Upload Image:</label><button id="imageUploadButton2" class="button">Select Image</button></div>
-                <div class="control-group"><label for="imageSizeSlider2">Image Size: <span id="imageSizeValue2">100</span></label><input type="range" id="imageSizeSlider2" min="30" max="300" value="100"></div>
-                <div class="control-group"><label for="moveSpeedSlider">Move Speed: <span id="moveSpeedValue">3</span></label><input type="range" id="moveSpeedSlider" min="1" max="10" value="3" step="0.5"></div>
-                <div class="control-group"><label for="rotationOnBeatSlider">Rotation On Beat: <span id="rotationOnBeatValue">45</span></label><input type="range" id="rotationOnBeatSlider" min="0" max="180" value="45"></div>
-                <div class="control-group"><label for="trailEffectCheckbox">Trail Effect:</label><input type="checkbox" id="trailEffectCheckbox" checked></div>
-            </div></details>`,
-            imageDancer: `<details open><summary>Image Dancer Settings</summary><div class="control-group-grid">
-                <div class="control-group"><label for="imageUploadButton3">Upload Image:</label><button id="imageUploadButton3" class="button">Select Image</button></div>
-                <div class="control-group"><label for="dancerImageSizeSlider">Image Size: <span id="dancerImageSizeValue">120</span></label><input type="range" id="dancerImageSizeSlider" min="40" max="300" value="120"></div>
-                <div class="control-group"><label for="dancerCountSlider">Dancer Count: <span id="dancerCountValue">8</span></label><input type="range" id="dancerCountSlider" min="1" max="20" value="8"></div>
-                <div class="control-group"><label for="dancerSpreadSlider">Spread Amount: <span id="dancerSpreadValue">200</span></label><input type="range" id="dancerSpreadSlider" min="50" max="500" value="200"></div>
-                <div class="control-group"><label for="dancerWaveSlider">Wave Intensity: <span id="dancerWaveValue">0.5</span></label><input type="range" id="dancerWaveSlider" min="0.1" max="2" value="0.5" step="0.1"></div>
-            </div></details>`
-        };
-        this.bindEvents();
-        this.updateModeSettings('circular');
-    }
-
-    bindEvents() {
-        this.dom.playButton.addEventListener('click', () => this.app.start());
-        this.dom.addFileButton.addEventListener('click', () => this.dom.audioFileInput.click());
-        this.dom.audioFileInput.addEventListener('change', e => this.app.loadFile(e.target.files[0]));
-        this.dom.micButton.addEventListener('click', () => this.app.useMicrophone());
-        this.dom.recordButton.addEventListener('click', () => this.app.toggleRecording());
-        this.dom.fullscreenButton.addEventListener('click', () => this.toggleFullscreen());
-        this.dom.logoutButton.addEventListener('click', () => this.app.authManager.logout());
-        this.dom.modeSelector.addEventListener('change', e => this.app.setMode(e.target.value));
-        this.dom.beatThresholdSlider.addEventListener('input', e => {
-            this.app.audioManager.beatThreshold = parseInt(e.target.value);
-            this.dom.beatThresholdValue.textContent = e.target.value;
-        });
-        this.dom.beatColorPicker.addEventListener('input', e => {
-            this.app.renderer.beatColor = e.target.value;
-        });
-    }
-
-    updateModeSettings(mode) {
-        this.dom.modeSettings.innerHTML = this.modeSettingsHTML[mode] || '';
-        this.bindModeSpecificEvents(mode);
-    }
-    
-    bindModeSpecificEvents(mode) {
-        const modeInstance = this.app.renderer.modes[mode];
-        if (!modeInstance) return;
-    
-        const settings = modeInstance.settings;
-        for (const key in settings) {
-            const elementId = this.getControlId(key, settings[key]);
-            const element = document.getElementById(elementId);
-            
-            if (element) {
-                const valueSpan = document.getElementById(`${key}Value`);
-                element.addEventListener('input', (e) => {
-                    const value = e.target.type === 'color' ? e.target.value : 
-                                 e.target.type === 'checkbox' ? e.target.checked :
-                                 parseFloat(e.target.value);
-                    modeInstance.updateSetting(key, value);
-                    if (valueSpan) valueSpan.textContent = value;
-                });
-            }
-        }
-
-        if (mode === 'imageJumper') {
-            const uploadBtn = document.getElementById('imageUploadButton');
-            if (uploadBtn) {
-                uploadBtn.addEventListener('click', () => this.dom.imageFileInput.click());
-                this.dom.imageFileInput.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            modeInstance.setImage(event.target.result);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-            }
-        }
-        if (mode === 'imageScreensaver') {
-            const uploadBtn = document.getElementById('imageUploadButton2');
-            if (uploadBtn) {
-                uploadBtn.addEventListener('click', () => this.dom.imageFileInput.click());
-            }
-        }
-        if (mode === 'imageDancer') {
-            const uploadBtn = document.getElementById('imageUploadButton3');
-            if (uploadBtn) {
-                uploadBtn.addEventListener('click', () => this.dom.imageFileInput.click());
-            }
-        }
-    }
-
-    getControlId(key, value) {
-        if (typeof value === 'boolean') return `${key}Checkbox`;
-        return typeof value === 'string' && value.startsWith('#') ? `${key}Picker` : `${key}Slider`;
-    }
-
-    toggleFullscreen() {
-        const elem = document.querySelector("#visualizer-container");
-        if (!document.fullscreenElement) {
-            elem.requestFullscreen().catch(err => {
-                alert(`Error enabling fullscreen: ${err.message}`);
-            });
-        } else {
-            document.exitFullscreen();
-        }
-    }
-    
-    updateRecordButton(isRecording) {
-        if (isRecording) {
-            this.dom.recordButton.textContent = '⏹ Stop Recording';
-            this.dom.recordButton.classList.add('stop-recording');
-        } else {
-            this.dom.recordButton.textContent = '⏺ Record';
-            this.dom.recordButton.classList.remove('stop-recording');
-        }
-    }
-    
-    showVisualizer() {
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('main-content').style.display = 'flex';
-        document.getElementById('footer').style.display = 'block';
-        
-        // Display current key in footer
-        const session = this.app.authManager.getSession();
-        if (session && session.key) {
-            document.getElementById('currentKeyDisplay').textContent = session.key;
-        }
-    }
-}
-
 class Renderer {
     constructor(audioManager) {
         this.audioManager = audioManager;
@@ -708,6 +494,26 @@ class Renderer {
         this.previewCtx = this.previewCanvas.getContext('2d');
         this.threeJsPreviewContainer = document.getElementById('threejs-preview-container');
         
+        // Initialize modes first
+        this.initializeModes();
+        
+        this.currentMode = this.modes.circular;
+        this.beatColor = '#ff0000';
+        
+        this.isCapturing = false;
+        this.captureCanvas = null;
+        this.offscreenThreeRenderer = null;
+
+        window.addEventListener('resize', this.resize.bind(this));
+        this.resize();
+        
+        // Initialize the first mode
+        if (this.currentMode && this.currentMode.init) {
+            this.currentMode.init();
+        }
+    }
+    
+    initializeModes() {
         this.modes = {
             circular: new CircularMode(this),
             linear: new LinearMode(this),
@@ -723,19 +529,10 @@ class Renderer {
             imageScreensaver: new ImageScreensaverMode(this),
             imageDancer: new ImageDancerMode(this)
         };
-        this.currentMode = this.modes.circular;
-        this.beatColor = '#ff0000';
-        
-        this.isCapturing = false;
-        this.captureCanvas = null;
-        this.offscreenThreeRenderer = null;
-
-        window.addEventListener('resize', this.resize.bind(this));
-        this.resize();
     }
     
     setMode(modeName) {
-        if (this.modes[modeName] && this.currentMode.id !== modeName) {
+        if (this.modes && this.modes[modeName] && this.currentMode.id !== modeName) {
             if (this.currentMode.cleanup) this.currentMode.cleanup();
             this.currentMode = this.modes[modeName];
             
@@ -751,7 +548,9 @@ class Renderer {
                 this.threeJsPreviewContainer.style.display = 'none';
             }
             
-            this.currentMode.init();
+            if (this.currentMode.init) {
+                this.currentMode.init();
+            }
             this.resize();
         }
     }
@@ -776,6 +575,8 @@ class Renderer {
     }
 
     draw() {
+        if (!this.audioManager || !this.currentMode) return;
+        
         const { frequencyData, timeDomainData, beatEffect } = this.audioManager;
         this.currentMode.draw(frequencyData, timeDomainData, beatEffect);
 
@@ -807,7 +608,7 @@ class Renderer {
             this.previewCanvas.height = pHeight;
         }
 
-        if (this.currentMode.onResize) {
+        if (this.currentMode && this.currentMode.onResize) {
             this.currentMode.onResize(width, height);
         }
     }
@@ -1691,6 +1492,256 @@ class ImageDancerMode extends Mode {
     }
 }
 
+class UIManager {
+    constructor(app) {
+        this.app = app;
+        this.dom = {
+            playButton: document.getElementById('play-button'),
+            overlay: document.getElementById('overlay'),
+            addFileButton: document.getElementById('addFileButton'),
+            micButton: document.getElementById('micButton'),
+            recordButton: document.getElementById('recordButton'),
+            downloadLink: document.getElementById('downloadLink'),
+            fullscreenButton: document.getElementById('fullscreenButton'),
+            logoutButton: document.getElementById('logoutButton'),
+            audioFileInput: document.getElementById('audioFileInput'),
+            imageFileInput: document.getElementById('imageFileInput'),
+            modeSelector: document.getElementById('mode-selector'),
+            modeSettings: document.getElementById('mode-settings'),
+            beatThresholdSlider: document.getElementById('beatThresholdSlider'),
+            beatThresholdValue: document.getElementById('beatThresholdValue'),
+            beatColorPicker: document.getElementById('beatColorPicker'),
+        };
+        this.modeSettingsHTML = {
+            circular: `<details open><summary>Circular Settings</summary><div class="control-group-grid">
+                <div class="control-group"><label for="barCountSlider">Bar Count: <span id="barCountValue">256</span></label><input type="range" id="barCountSlider" min="64" max="512" value="256" step="2"></div>
+                <div class="control-group"><label for="radiusSlider">Base Radius: <span id="radiusValue">100</span></label><input type="range" id="radiusSlider" min="50" max="300" value="100"></div>
+                <div class="control-group"><label for="lineWidthSlider">Line Width: <span id="lineWidthValue">3</span></label><input type="range" id="lineWidthSlider" min="1" max="10" value="3"></div>
+                <div class="control-group"><label for="lineColorPicker">Line Color:</label><input type="color" id="lineColorPicker" value="#00ffff"></div>
+            </div></details>`,
+            linear: `<details open><summary>Linear Settings</summary><div class="control-group-grid">
+                <div class="control-group"><label for="barCountSlider">Bar Count: <span id="barCountValue">256</span></label><input type="range" id="barCountSlider" min="64" max="512" value="256" step="2"></div>
+                <div class="control-group"><label for="barHeightSlider">Min Bar Height: <span id="barHeightValue">2</span></label><input type="range" id="barHeightSlider" min="1" max="20" value="2"></div>
+                <div class="control-group"><label for="barSpacingSlider">Bar Spacing: <span id="barSpacingValue">1</span></label><input type="range" id="barSpacingSlider" min="0" max="10" value="1"></div>
+                <div class="control-group"><label for="barColorPicker">Bar Color:</label><input type="color" id="barColorPicker" value="#00ff88"></div>
+            </div></details>`,
+            particle: `<details open><summary>Particle Settings</summary><div class="control-group-grid">
+                <div class="control-group"><label for="particleCountSlider">Particle Count: <span id="particleCountValue">400</span></label><input type="range" id="particleCountSlider" min="50" max="1000" value="400"></div>
+                <div class="control-group"><label for="particleSizeSlider">Particle Size: <span id="particleSizeValue">3</span></label><input type="range" id="particleSizeSlider" min="1" max="10" value="3"></div>
+                <div class="control-group"><label for="particleColorPicker">Particle Color:</label><input type="color" id="particleColorPicker" value="#00ffff"></div>
+            </div></details>`,
+            waveform: `<details open><summary>Waveform Settings</summary><div class="control-group-grid">
+                <div class="control-group"><label for="waveformThicknessSlider">Line Thickness: <span id="waveformThicknessValue">3</span></label><input type="range" id="waveformThicknessSlider" min="1" max="10" value="3"></div>
+                <div class="control-group"><label for="waveformColorPicker">Waveform Color:</label><input type="color" id="waveformColorPicker" value="#00ff00"></div>
+            </div></details>`,
+            galaxy: `<details open><summary>Galaxy Settings</summary><div class="control-group-grid">
+                <div class="control-group"><label for="particleCountSlider">Star Count: <span id="particleCountValue">600</span></label><input type="range" id="particleCountSlider" min="100" max="2000" value="600"></div>
+                <div class="control-group"><label for="particleSizeSlider">Star Size: <span id="particleSizeValue">2</span></label><input type="range" id="particleSizeSlider" min="0.5" max="5" value="2" step="0.1"></div>
+                <div class="control-group"><label for="rotationSpeedSlider">Rotation Speed: <span id="rotationSpeedValue">0.15</span></label><input type="range" id="rotationSpeedSlider" min="0" max="1" value="0.15" step="0.01"></div>
+            </div></details>`,
+            threeD: `<details open><summary>3D Settings</summary><div class="control-group-grid">
+                <div class="control-group"><label for="barCountSlider">Bar Count: <span id="barCountValue">128</span></label><input type="range" id="barCountSlider" min="32" max="256" value="128" step="2"></div>
+                <div class="control-group"><label for="threeDCameraZSlider">Camera Distance: <span id="threeDCameraZValue">500</span></label><input type="range" id="threeDCameraZSlider" min="100" max="1000" value="500"></div>
+                <div class="control-group"><label for="threeDBarDepthSlider">Bar Depth: <span id="threeDBarDepthValue">50</span></label><input type="range" id="threeDBarDepthSlider" min="10" max="100" value="50"></div>
+                <div class="control-group"><label for="threeDRotationSpeedSlider">Auto-Rotate: <span id="threeDRotationSpeedValue">1</span></label><input type="range" id="threeDRotationSpeedSlider" min="0" max="10" value="1" step="0.1"></div>
+                <div class="control-group"><label for="threeDBarColorPicker">Bar Color:</label><input type="color" id="threeDBarColorPicker" value="#ff00ff"></div>
+            </div></details>`,
+            reflected: `<details open><summary>Reflected Settings</summary><div class="control-group-grid">
+                <div class="control-group"><label for="barCountSlider">Bar Count: <span id="barCountValue">256</span></label><input type="range" id="barCountSlider" min="64" max="512" value="256" step="2"></div>
+                <div class="control-group"><label for="barHeightSlider">Min Bar Height: <span id="barHeightValue">2</span></label><input type="range" id="barHeightSlider" min="1" max="20" value="2"></div>
+                <div class="control-group"><label for="barSpacingSlider">Bar Spacing: <span id="barSpacingValue">1</span></label><input type="range" id="barSpacingSlider" min="0" max="10" value="1"></div>
+                <div class="control-group"><label for="barColorPicker">Bar Color:</label><input type="color" id="barColorPicker" value="#ff6600"></div>
+            </div></details>`,
+            flower: `<details open><summary>Flower Settings</summary><div class="control-group-grid">
+                <div class="control-group"><label for="petalCountSlider">Petal Count: <span id="petalCountValue">16</span></label><input type="range" id="petalCountSlider" min="4" max="48" value="16" step="2"></div>
+                <div class="control-group"><label for="radiusSlider">Base Radius: <span id="radiusValue">80</span></label><input type="range" id="radiusSlider" min="20" max="200" value="80"></div>
+                <div class="control-group"><label for="lineWidthSlider">Line Width: <span id="lineWidthValue">2</span></label><input type="range" id="lineWidthSlider" min="1" max="10" value="2"></div>
+                <div class="control-group"><label for="petalColorPicker">Petal Color:</label><input type="color" id="petalColorPicker" value="#ff80ff"></div>
+            </div></details>`,
+            radial: `<details open><summary>Radial Burst Settings</summary><div class="control-group-grid">
+                <div class="control-group"><label for="rayCountSlider">Ray Count: <span id="rayCountValue">360</span></label><input type="range" id="rayCountSlider" min="180" max="720" value="360" step="10"></div>
+                <div class="control-group"><label for="innerRadiusSlider">Inner Radius: <span id="innerRadiusValue">30</span></label><input type="range" id="innerRadiusSlider" min="10" max="100" value="30"></div>
+                <div class="control-group"><label for="radialColorPicker">Ray Color:</label><input type="color" id="radialColorPicker" value="#ffff00"></div>
+            </div></details>`,
+            dna: `<details open><summary>DNA Helix Settings</summary><div class="control-group-grid">
+                <div class="control-group"><label for="segmentCountSlider">Segments: <span id="segmentCountValue">100</span></label><input type="range" id="segmentCountSlider" min="50" max="200" value="100"></div>
+                <div class="control-group"><label for="helixRadiusSlider">Helix Radius: <span id="helixRadiusValue">80</span></label><input type="range" id="helixRadiusSlider" min="30" max="150" value="80"></div>
+                <div class="control-group"><label for="dnaColorPicker">Strand Color:</label><input type="color" id="dnaColorPicker" value="#00ffaa"></div>
+            </div></details>`,
+            imageJumper: `<details open><summary>Image Jumper Settings</summary><div class="control-group-grid">
+                <div class="control-group"><label for="imageUploadButton">Upload Image:</label><button id="imageUploadButton" class="button">Select Image</button></div>
+                <div class="control-group"><label for="imageSizeSlider">Image Size: <span id="imageSizeValue">150</span></label><input type="range" id="imageSizeSlider" min="50" max="400" value="150"></div>
+                <div class="control-group"><label for="jumpIntensitySlider">Jump Intensity: <span id="jumpIntensityValue">80</span></label><input type="range" id="jumpIntensitySlider" min="10" max="200" value="80"></div>
+                <div class="control-group"><label for="rotationSpeedSlider">Rotation Speed: <span id="rotationSpeedValue">0.5</span></label><input type="range" id="rotationSpeedSlider" min="0" max="2" value="0.5" step="0.1"></div>
+            </div></details>`,
+            imageScreensaver: `<details open><summary>Image Screensaver Settings</summary><div class="control-group-grid">
+                <div class="control-group"><label for="imageUploadButton2">Upload Image:</label><button id="imageUploadButton2" class="button">Select Image</button></div>
+                <div class="control-group"><label for="imageSizeSlider2">Image Size: <span id="imageSizeValue2">100</span></label><input type="range" id="imageSizeSlider2" min="30" max="300" value="100"></div>
+                <div class="control-group"><label for="moveSpeedSlider">Move Speed: <span id="moveSpeedValue">3</span></label><input type="range" id="moveSpeedSlider" min="1" max="10" value="3" step="0.5"></div>
+                <div class="control-group"><label for="rotationOnBeatSlider">Rotation On Beat: <span id="rotationOnBeatValue">45</span></label><input type="range" id="rotationOnBeatSlider" min="0" max="180" value="45"></div>
+                <div class="control-group"><label for="trailEffectCheckbox">Trail Effect:</label><input type="checkbox" id="trailEffectCheckbox" checked></div>
+            </div></details>`,
+            imageDancer: `<details open><summary>Image Dancer Settings</summary><div class="control-group-grid">
+                <div class="control-group"><label for="imageUploadButton3">Upload Image:</label><button id="imageUploadButton3" class="button">Select Image</button></div>
+                <div class="control-group"><label for="dancerImageSizeSlider">Image Size: <span id="dancerImageSizeValue">120</span></label><input type="range" id="dancerImageSizeSlider" min="40" max="300" value="120"></div>
+                <div class="control-group"><label for="dancerCountSlider">Dancer Count: <span id="dancerCountValue">8</span></label><input type="range" id="dancerCountSlider" min="1" max="20" value="8"></div>
+                <div class="control-group"><label for="dancerSpreadSlider">Spread Amount: <span id="dancerSpreadValue">200</span></label><input type="range" id="dancerSpreadSlider" min="50" max="500" value="200"></div>
+                <div class="control-group"><label for="dancerWaveSlider">Wave Intensity: <span id="dancerWaveValue">0.5</span></label><input type="range" id="dancerWaveSlider" min="0.1" max="2" value="0.5" step="0.1"></div>
+            </div></details>`
+        };
+        this.bindEvents();
+        // Don't call updateModeSettings here - it will be called after renderer is ready
+    }
+
+    bindEvents() {
+        this.dom.playButton.addEventListener('click', () => this.app.start());
+        this.dom.addFileButton.addEventListener('click', () => this.dom.audioFileInput.click());
+        this.dom.audioFileInput.addEventListener('change', e => this.app.loadFile(e.target.files[0]));
+        this.dom.micButton.addEventListener('click', () => this.app.useMicrophone());
+        this.dom.recordButton.addEventListener('click', () => this.app.toggleRecording());
+        this.dom.fullscreenButton.addEventListener('click', () => this.toggleFullscreen());
+        this.dom.logoutButton.addEventListener('click', () => this.app.authManager.logout());
+        this.dom.modeSelector.addEventListener('change', e => {
+            if (this.app.renderer && this.app.renderer.modes) {
+                this.app.setMode(e.target.value);
+            }
+        });
+        this.dom.beatThresholdSlider.addEventListener('input', e => {
+            if (this.app.audioManager) {
+                this.app.audioManager.beatThreshold = parseInt(e.target.value);
+                this.dom.beatThresholdValue.textContent = e.target.value;
+            }
+        });
+        this.dom.beatColorPicker.addEventListener('input', e => {
+            if (this.app.renderer) {
+                this.app.renderer.beatColor = e.target.value;
+            }
+        });
+    }
+
+    updateModeSettings(mode) {
+        if (!this.app.renderer || !this.app.renderer.modes) {
+            console.warn('Renderer not ready yet, delaying mode settings update');
+            setTimeout(() => this.updateModeSettings(mode), 100);
+            return;
+        }
+        
+        this.dom.modeSettings.innerHTML = this.modeSettingsHTML[mode] || '';
+        this.bindModeSpecificEvents(mode);
+    }
+    
+    bindModeSpecificEvents(mode) {
+        if (!this.app.renderer || !this.app.renderer.modes) {
+            console.warn('Renderer modes not available yet');
+            return;
+        }
+        
+        const modeInstance = this.app.renderer.modes[mode];
+        if (!modeInstance) return;
+    
+        const settings = modeInstance.settings;
+        for (const key in settings) {
+            const elementId = this.getControlId(key, settings[key]);
+            const element = document.getElementById(elementId);
+            
+            if (element) {
+                const valueSpan = document.getElementById(`${key}Value`);
+                element.addEventListener('input', (e) => {
+                    const value = e.target.type === 'color' ? e.target.value : 
+                                 e.target.type === 'checkbox' ? e.target.checked :
+                                 parseFloat(e.target.value);
+                    modeInstance.updateSetting(key, value);
+                    if (valueSpan) valueSpan.textContent = value;
+                });
+            }
+        }
+
+        if (mode === 'imageJumper') {
+            const uploadBtn = document.getElementById('imageUploadButton');
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', () => this.dom.imageFileInput.click());
+                this.dom.imageFileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            modeInstance.setImage(event.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        }
+        if (mode === 'imageScreensaver') {
+            const uploadBtn = document.getElementById('imageUploadButton2');
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', () => this.dom.imageFileInput.click());
+            }
+        }
+        if (mode === 'imageDancer') {
+            const uploadBtn = document.getElementById('imageUploadButton3');
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', () => this.dom.imageFileInput.click());
+            }
+        }
+    }
+
+    getControlId(key, value) {
+        if (typeof value === 'boolean') return `${key}Checkbox`;
+        return typeof value === 'string' && value.startsWith('#') ? `${key}Picker` : `${key}Slider`;
+    }
+
+    toggleFullscreen() {
+        const elem = document.querySelector("#visualizer-container");
+        if (!document.fullscreenElement) {
+            elem.requestFullscreen().catch(err => {
+                alert(`Error enabling fullscreen: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+    
+    updateRecordButton(isRecording) {
+        if (this.dom.recordButton) {
+            if (isRecording) {
+                this.dom.recordButton.textContent = '⏹ Stop Recording';
+                this.dom.recordButton.classList.add('stop-recording');
+            } else {
+                this.dom.recordButton.textContent = '⏺ Record';
+                this.dom.recordButton.classList.remove('stop-recording');
+            }
+        }
+    }
+    
+    showVisualizer() {
+        const loginOverlay = document.getElementById('login-overlay');
+        const mainContent = document.getElementById('main-content');
+        const footer = document.getElementById('footer');
+        const adminPanel = document.getElementById('adminPanel');
+        
+        if (loginOverlay) loginOverlay.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'flex';
+        if (footer) footer.style.display = 'block';
+        
+        // Check if user is admin and show/hide admin panel
+        const session = this.app.authManager.getSession();
+        if (session && session.isAdmin) {
+            if (adminPanel) adminPanel.style.display = 'block';
+        } else {
+            if (adminPanel) adminPanel.style.display = 'none';
+        }
+        
+        // Display current key in footer
+        if (session && session.key) {
+            const currentKeyDisplay = document.getElementById('currentKeyDisplay');
+            if (currentKeyDisplay) {
+                currentKeyDisplay.textContent = session.key;
+            }
+        }
+    }
+}
+
 class App {
     constructor() {
         // Initialize auth manager first
@@ -1709,6 +1760,8 @@ class App {
         const loginButton = document.getElementById('loginButton');
         const accessKeyInput = document.getElementById('accessKey');
         const errorMessage = document.getElementById('errorMessage');
+        
+        if (!loginButton || !accessKeyInput) return;
         
         loginButton.addEventListener('click', () => {
             const key = accessKeyInput.value.trim();
@@ -1737,6 +1790,7 @@ class App {
             
             let exportText = "=== AUDIO VISUALIZER ACCESS KEYS ===\n\n";
             keys.forEach(key => {
+                if (key === this.authManager.ADMIN_KEY) return; // Don't include admin key
                 const info = keyData[key] || {};
                 exportText += `Key: ${key}\n`;
                 exportText += `Created: ${new Date(info.created).toLocaleString()}\n`;
@@ -1793,6 +1847,8 @@ class App {
     
     showError(message) {
         const errorMessage = document.getElementById('errorMessage');
+        if (!errorMessage) return;
+        
         errorMessage.textContent = message;
         errorMessage.style.display = 'block';
         
@@ -1803,13 +1859,18 @@ class App {
     }
     
     initializeApp() {
-        // Hide login overlay, show main app
-        this.uiManager = new UIManager(this);
-        this.uiManager.showVisualizer();
-        
-        // Initialize audio and renderer
+        // Initialize audio and renderer first
         this.audioManager = new AudioManager();
         this.renderer = new Renderer(this.audioManager);
+        
+        // Then initialize UI manager
+        this.uiManager = new UIManager(this);
+        
+        // Now it's safe to update mode settings
+        this.uiManager.updateModeSettings('circular');
+        
+        // Show the visualizer
+        this.uiManager.showVisualizer();
         
         // Initialize app state
         this.isRecording = false;
@@ -1837,8 +1898,15 @@ class App {
     async activateVisualizer(playOnStart = false) {
         if (this.started) return;
         this.started = true;
-        this.uiManager.dom.overlay.classList.add('hidden');
-        await this.audioManager.audioContext.resume();
+        
+        if (this.uiManager && this.uiManager.dom.overlay) {
+            this.uiManager.dom.overlay.classList.add('hidden');
+        }
+        
+        if (this.audioManager && this.audioManager.audioContext) {
+            await this.audioManager.audioContext.resume();
+        }
+        
         if (!this.audioManager.sourceNode) {
             await this.audioManager.loadUrl("https://cdn.pixabay.com/audio/2022/06/23/audio_2dee563a61.mp3");
             if (playOnStart && this.audioManager.audioElement) {
@@ -1850,35 +1918,47 @@ class App {
 
     async start() {
         if (!this.started) await this.activateVisualizer(true);
-        if (this.audioManager.audioElement) {
+        if (this.audioManager && this.audioManager.audioElement) {
             this.audioManager.audioElement.play();
         }
     }
 
     loop() {
-        this.audioManager.update();
-        this.renderer.draw();
+        if (this.audioManager) {
+            this.audioManager.update();
+        }
+        if (this.renderer) {
+            this.renderer.draw();
+        }
         this.animationFrameId = requestAnimationFrame(this.loop.bind(this));
     }
 
     async loadFile(file) {
         if (!file) return;
-        await this.audioManager.loadFile(file);
+        if (this.audioManager) {
+            await this.audioManager.loadFile(file);
+        }
         if (!this.started) {
             this.activateVisualizer(false);
         }
     }
 
     async useMicrophone() {
-        await this.audioManager.loadMicrophone();
+        if (this.audioManager) {
+            await this.audioManager.loadMicrophone();
+        }
         if (!this.started) {
             this.activateVisualizer(false);
         }
     }
 
     setMode(mode) {
-        this.renderer.setMode(mode);
-        this.uiManager.updateModeSettings(mode);
+        if (this.renderer) {
+            this.renderer.setMode(mode);
+        }
+        if (this.uiManager) {
+            this.uiManager.updateModeSettings(mode);
+        }
     }
     
     toggleRecording() {
@@ -1887,7 +1967,7 @@ class App {
     }
 
     startRecording() {
-        if (!this.audioManager.sourceNode) {
+        if (!this.audioManager || !this.audioManager.sourceNode) {
             alert("Please load audio or use the microphone before recording.");
             return;
         }
@@ -1899,7 +1979,9 @@ class App {
         this.offscreenCanvas.width = 1920;
         this.offscreenCanvas.height = 1080;
 
-        this.renderer.beginFullscreenCapture(this.offscreenCanvas);
+        if (this.renderer) {
+            this.renderer.beginFullscreenCapture(this.offscreenCanvas);
+        }
 
         const videoStream = this.offscreenCanvas.captureStream(30);
         
@@ -1913,26 +1995,33 @@ class App {
         this.mediaRecorder.onstop = () => {
             const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
             const url = URL.createObjectURL(blob);
-            this.uiManager.dom.downloadLink.href = url;
-            this.uiManager.dom.downloadLink.style.display = 'block';
+            if (this.uiManager && this.uiManager.dom.downloadLink) {
+                this.uiManager.dom.downloadLink.href = url;
+                this.uiManager.dom.downloadLink.style.display = 'block';
+            }
         };
         this.mediaRecorder.start();
         this.isRecording = true;
-        this.uiManager.updateRecordButton(true);
+        if (this.uiManager) {
+            this.uiManager.updateRecordButton(true);
+        }
     }
     
     stopRecording() {
         if (this.mediaRecorder) this.mediaRecorder.stop();
         this.isRecording = false;
-        this.uiManager.updateRecordButton(false);
-        if (this.audioManager.sourceNode && this.audioStreamDestination) {
+        if (this.uiManager) {
+            this.uiManager.updateRecordButton(false);
+        }
+        if (this.audioManager && this.audioManager.sourceNode && this.audioStreamDestination) {
             this.audioManager.sourceNode.disconnect(this.audioStreamDestination);
             this.audioStreamDestination = null;
         }
-        this.renderer.endFullscreenCapture();
+        if (this.renderer) {
+            this.renderer.endFullscreenCapture();
+        }
         this.offscreenCanvas = null;
     }
 }
 
-// Initialize app on page load
 window.addEventListener('load', () => new App());
