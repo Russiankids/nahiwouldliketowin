@@ -363,7 +363,7 @@ class AuthManager {
 // ==================== MAIN APPLICATION ====================
 class AudioManager {
     constructor() {
-        this.audioContext = new AudioContext();
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         this.analyser = this.audioContext.createAnalyser();
         this.analyser.fftSize = 4096;
         this.analyser.smoothingTimeConstant = 0.8;
@@ -378,91 +378,6 @@ class AudioManager {
         this.beatThreshold = 3000;
     }
 
-    setupLogin() {
-    const loginButton = document.getElementById('loginButton');
-    const accessKeyInput = document.getElementById('accessKey');
-    const errorMessage = document.getElementById('errorMessage');
-    
-    loginButton.addEventListener('click', () => {
-        const key = accessKeyInput.value.trim();
-        if (!key) {
-            this.showError("Please enter an access key");
-            return;
-        }
-        
-        const result = this.authManager.login(key);
-        if (result.valid) {
-            this.initializeApp();
-        } else {
-            this.showError(result.message);
-        }
-    });
-    
-    // Admin controls
-    document.getElementById('generateMoreKeys')?.addEventListener('click', () => {
-        const newKeys = this.authManager.generateMoreKeys(10);
-        alert(`Generated 10 new keys! You now have ${this.authManager.validKeys.length} total keys.`);
-    });
-    
-    document.getElementById('exportKeys')?.addEventListener('click', () => {
-        const keys = this.authManager.validKeys;
-        const keyData = JSON.parse(localStorage.getItem(this.authManager.STORAGE_KEY) || '{}');
-        
-        let exportText = "=== AUDIO VISUALIZER ACCESS KEYS ===\n\n";
-        keys.forEach(key => {
-            const info = keyData[key] || {};
-            exportText += `Key: ${key}\n`;
-            exportText += `Created: ${new Date(info.created).toLocaleString()}\n`;
-            exportText += `Used: ${info.usageCount || 0} times\n`;
-            exportText += `Status: ${info.isActive === false ? 'DEACTIVATED' : 'ACTIVE'}\n`;
-            exportText += `Last Used: ${info.lastUsed ? new Date(info.lastUsed).toLocaleString() : 'Never'}\n`;
-            exportText += "─".repeat(40) + "\n\n";
-        });
-        
-        // Create download link
-        const blob = new Blob([exportText], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'audio-visualizer-keys.txt';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    });
-    
-    document.getElementById('deactivateKey')?.addEventListener('click', () => {
-        const keyInput = document.getElementById('keyToDeactivate');
-        const key = keyInput.value.trim().toUpperCase();
-        
-        if (!key) {
-            alert("Please enter a key to deactivate");
-            return;
-        }
-        
-        if (!this.authManager.validKeys.includes(key)) {
-            alert("Key not found in the list");
-            return;
-        }
-        
-        if (confirm(`Are you sure you want to deactivate key:\n${key}\n\nThis will prevent this key from being used to login.`)) {
-            const success = this.authManager.deactivateKey(key);
-            if (success) {
-                alert(`Key ${key} has been deactivated.`);
-                keyInput.value = '';
-            } else {
-                alert("Failed to deactivate key.");
-            }
-        }
-    });
-    
-
-    accessKeyInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            loginButton.click();
-        }
-    });
-
     async loadUrl(url) {
         if (this.sourceNode) this.disconnectSource();
         this.audioElement = new Audio(url);
@@ -470,6 +385,7 @@ class AudioManager {
         this.sourceNode = this.audioContext.createMediaElementSource(this.audioElement);
         this.isMic = false;
         this.connectSource();
+        return this.audioElement;
     }
 
     async loadFile(file) {
@@ -480,20 +396,29 @@ class AudioManager {
     async loadMicrophone() {
         if (this.sourceNode) this.disconnectSource();
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: false
+                }, 
+                video: false 
+            });
             this.sourceNode = this.audioContext.createMediaStreamSource(stream);
             this.isMic = true;
             this.connectSource();
         } catch (err) {
-            alert("Microphone access denied.");
-            console.error(err);
+            console.error("Microphone access denied:", err);
+            alert("Microphone access denied. Please allow microphone access to use this feature.");
         }
     }
 
     connectSource() {
-        this.sourceNode.connect(this.analyser);
-        if (!this.isMic) {
-            this.analyser.connect(this.audioContext.destination);
+        if (this.sourceNode) {
+            this.sourceNode.connect(this.analyser);
+            if (!this.isMic) {
+                this.analyser.connect(this.audioContext.destination);
+            }
         }
     }
 
@@ -505,6 +430,7 @@ class AudioManager {
             }
             if (this.audioElement) {
                 this.audioElement.pause();
+                this.audioElement.src = '';
                 this.audioElement = null;
             }
             this.sourceNode = null;
@@ -512,9 +438,12 @@ class AudioManager {
     }
 
     update() {
+        if (!this.analyser) return;
+        
         this.analyser.getByteFrequencyData(this.frequencyData);
         this.analyser.getByteTimeDomainData(this.timeDomainData);
 
+        // Beat detection
         const bass = this.frequencyData.slice(0, 32).reduce((a, b) => a + b, 0);
         if (bass - this.oldIntensity > this.beatThreshold) {
             this.beatEffect = 1;
@@ -1763,6 +1692,64 @@ class App {
                 this.initializeApp();
             } else {
                 this.showError(result.message);
+            }
+        });
+        
+        // Admin controls
+        document.getElementById('generateMoreKeys')?.addEventListener('click', () => {
+            const newKeys = this.authManager.generateMoreKeys(10);
+            alert(`Generated 10 new keys! You now have ${this.authManager.validKeys.length} total keys.`);
+        });
+        
+        document.getElementById('exportKeys')?.addEventListener('click', () => {
+            const keys = this.authManager.validKeys;
+            const keyData = JSON.parse(localStorage.getItem(this.authManager.STORAGE_KEY) || '{}');
+            
+            let exportText = "=== AUDIO VISUALIZER ACCESS KEYS ===\n\n";
+            keys.forEach(key => {
+                const info = keyData[key] || {};
+                exportText += `Key: ${key}\n`;
+                exportText += `Created: ${new Date(info.created).toLocaleString()}\n`;
+                exportText += `Used: ${info.usageCount || 0} times\n`;
+                exportText += `Status: ${info.isActive === false ? 'DEACTIVATED' : 'ACTIVE'}\n`;
+                exportText += `Last Used: ${info.lastUsed ? new Date(info.lastUsed).toLocaleString() : 'Never'}\n`;
+                exportText += "─".repeat(40) + "\n\n";
+            });
+            
+            // Create download link
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'audio-visualizer-keys.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+        
+        document.getElementById('deactivateKey')?.addEventListener('click', () => {
+            const keyInput = document.getElementById('keyToDeactivate');
+            const key = keyInput.value.trim().toUpperCase();
+            
+            if (!key) {
+                alert("Please enter a key to deactivate");
+                return;
+            }
+            
+            if (!this.authManager.validKeys.includes(key)) {
+                alert("Key not found in the list");
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to deactivate key:\n${key}\n\nThis will prevent this key from being used to login.`)) {
+                const success = this.authManager.deactivateKey(key);
+                if (success) {
+                    alert(`Key ${key} has been deactivated.`);
+                    keyInput.value = '';
+                } else {
+                    alert("Failed to deactivate key.");
+                }
             }
         });
         
