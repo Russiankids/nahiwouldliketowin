@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audio Visualizer</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Changed Three.js CDN to avoid tracking prevention issues -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
     <style>
         :root {
             --bg-primary: #D4D0C8;
@@ -505,6 +506,17 @@
             z-index: 100;
         }
 
+        .admin-controls {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .admin-controls h4 {
+            color: white;
+            margin-bottom: 10px;
+        }
+
         .admin-controls .button {
             transition: all 0.2s;
             font-weight: bold;
@@ -541,14 +553,14 @@
             
             <div id="errorMessage" class="error-message"></div>
             
-            <div class="admin-panel">
+            <div class="admin-panel" id="adminPanel" style="display: none;">
                 <h3>🔑 Admin Panel (Generated Keys)</h3>
                 <div class="key-list" id="keyList">
                     <!-- Keys will be generated here -->
                 </div>
                 
-                <div class="admin-controls" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <h4 style="color: white; margin-bottom: 10px;">📊 Key Management</h4>
+                <div class="admin-controls">
+                    <h4>📊 Key Management</h4>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                         <button id="generateMoreKeys" class="button" style="padding: 8px; background: #000080; color: white; border: none; border-radius: 4px; cursor: pointer;">
@@ -692,8 +704,10 @@
 
     <script>
         if (typeof THREE === 'undefined') {
-            console.error('Three.js failed to load from CDN. Please check your internet connection.');
-            document.write('<script src="https://unpkg.com/three@0.128.0/build/three.min.js"><\/script>');
+            console.warn('Three.js failed to load from primary CDN. Trying backup...');
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/three@0.128.0/build/three.min.js';
+            document.head.appendChild(script);
         }
     </script>
     <script src="script.js"></script>
