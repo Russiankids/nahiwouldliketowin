@@ -1,22 +1,69 @@
 // ==================== AUTHENTICATION SYSTEM ====================
 class AuthManager {
     constructor() {
-        // Generate 20 unique access keys (in production, these would be stored server-side)
-        this.validKeys = this.generateKeys();
-        
         // Storage keys
         this.STORAGE_KEY = 'audio_visualizer_keys';
+        this.GENERATED_KEYS_KEY = 'audio_visualizer_generated_keys';
         this.SESSION_KEY = 'audio_visualizer_session';
         
         // Initialize
-        this.initializeKeys();
+        this.validKeys = this.initializeKeys();
         this.displayKeys();
     }
     
-    generateKeys() {
-        // Generate 20 unique keys with format: AVPRO-XXXX-XXXX-XXXX
+    initializeKeys() {
+        // Check if we already generated keys
+        let storedKeys = localStorage.getItem(this.GENERATED_KEYS_KEY);
+        
+        if (!storedKeys) {
+            // Generate 20 unique keys for the first time
+            const newKeys = this.generateNewKeys(20);
+            localStorage.setItem(this.GENERATED_KEYS_KEY, JSON.stringify(newKeys));
+            storedKeys = JSON.stringify(newKeys);
+            
+            // Initialize key usage data
+            const keyData = {};
+            newKeys.forEach(key => {
+                keyData[key] = {
+                    created: new Date().toISOString(),
+                    lastUsed: null,
+                    activeSession: null,
+                    usageCount: 0,
+                    isActive: true
+                };
+            });
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(keyData));
+        }
+        
+        const keys = JSON.parse(storedKeys);
+        
+        // Ensure we have key data for each key
+        let keyData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+        let needsUpdate = false;
+        
+        keys.forEach(key => {
+            if (!keyData[key]) {
+                keyData[key] = {
+                    created: new Date().toISOString(),
+                    lastUsed: null,
+                    activeSession: null,
+                    usageCount: 0,
+                    isActive: true
+                };
+                needsUpdate = true;
+            }
+        });
+        
+        if (needsUpdate) {
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(keyData));
+        }
+        
+        return keys;
+    }
+    
+    generateNewKeys(count) {
         const keys = [];
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < count; i++) {
             const part1 = Math.random().toString(36).substring(2, 6).toUpperCase();
             const part2 = Math.random().toString(36).substring(2, 6).toUpperCase();
             const part3 = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -25,34 +72,78 @@ class AuthManager {
         return keys;
     }
     
-    initializeKeys() {
-        // Initialize key storage if not exists
-        if (!localStorage.getItem(this.STORAGE_KEY)) {
-            const keyData = {};
-            this.validKeys.forEach(key => {
-                keyData[key] = {
-                    created: new Date().toISOString(),
-                    lastUsed: null,
-                    activeSession: null,
-                    usageCount: 0
-                };
-            });
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(keyData));
-        }
-    }
-    
     displayKeys() {
         const keyList = document.getElementById('keyList');
         if (!keyList) return;
         
         const keyData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+        const keys = JSON.parse(localStorage.getItem(this.GENERATED_KEYS_KEY) || '[]');
+        
         keyList.innerHTML = '';
         
-        this.validKeys.forEach(key => {
+        if (keys.length === 0) {
+            keyList.innerHTML = '<div style="color: #999; text-align: center;">No keys generated yet. Refresh the page.</div>';
+            return;
+        }
+        
+        keys.forEach(key => {
             const keyInfo = keyData[key] || {};
             const div = document.createElement('div');
-            div.innerHTML = `<strong>${key}</strong> - Used: ${keyInfo.usageCount || 0} times`;
+            div.className = 'key-item';
+            div.innerHTML = `
+                <div style="margin-bottom: 3px;">
+                    <strong style="color: #fff;">${key}</strong>
+                </div>
+                <div style="font-size: 11px; color: #aaa;">
+                    Created: ${new Date(keyInfo.created).toLocaleDateString()} |
+                    Used: ${keyInfo.usageCount || 0} times
+                    ${keyInfo.activeSession ? '<span style="color: #ffcc00;"> | IN USE</span>' : ''}
+                </div>
+            `;
+            
+            // Add click to copy functionality
+            div.style.cursor = 'pointer';
+            div.style.padding = '8px';
+            div.style.borderRadius = '4px';
+            div.style.marginBottom = '5px';
+            div.style.transition = 'background 0.2s';
+            
+            div.addEventListener('mouseenter', () => {
+                div.style.background = 'rgba(255, 255, 255, 0.1)';
+            });
+            div.addEventListener('mouseleave', () => {
+                div.style.background = 'transparent';
+            });
+            
+            div.addEventListener('click', () => {
+                navigator.clipboard.writeText(key).then(() => {
+                    const originalHTML = div.innerHTML;
+                    div.innerHTML = '<span style="color: #33cc33;">✓ Copied to clipboard!</span>';
+                    setTimeout(() => {
+                        div.innerHTML = originalHTML;
+                    }, 2000);
+                });
+            });
+            
             keyList.appendChild(div);
+        });
+        
+        // Add copy all button at the bottom
+        const copyAllDiv = document.createElement('div');
+        copyAllDiv.innerHTML = '<hr style="border-color: rgba(255,255,255,0.1); margin: 10px 0;"><button id="copyAllKeys" style="width: 100%; padding: 8px; background: #000080; color: white; border: none; border-radius: 4px; cursor: pointer;">Copy All Keys to Clipboard</button>';
+        keyList.appendChild(copyAllDiv);
+        
+        document.getElementById('copyAllKeys')?.addEventListener('click', () => {
+            const allKeys = keys.join('\n');
+            navigator.clipboard.writeText(allKeys).then(() => {
+                const btn = document.getElementById('copyAllKeys');
+                btn.textContent = '✓ All Keys Copied!';
+                btn.style.background = '#33cc33';
+                setTimeout(() => {
+                    btn.textContent = 'Copy All Keys to Clipboard';
+                    btn.style.background = '#000080';
+                }, 2000);
+            });
         });
     }
     
@@ -87,13 +178,16 @@ class AuthManager {
         
         const keyData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
         const keyInfo = keyData[key] || {};
+        
+        // For GitHub Pages, we'll allow multiple sessions with same key
+        // But we can still track which browser is using it
         const fingerprint = this.generateBrowserFingerprint();
         
-        // Check if key is already in use from a different browser
-        if (keyInfo.activeSession && keyInfo.activeSession !== fingerprint) {
+        // Check if key is disabled
+        if (keyInfo.isActive === false) {
             return { 
                 valid: false, 
-                message: "This key is already in use from a different browser/device. Please use the original browser or contact support." 
+                message: "This key has been deactivated" 
             };
         }
         
@@ -113,7 +207,8 @@ class AuthManager {
             created: keyData[key]?.created || new Date().toISOString(),
             lastUsed: new Date().toISOString(),
             activeSession: validation.fingerprint,
-            usageCount: (keyData[key]?.usageCount || 0) + 1
+            usageCount: (keyData[key]?.usageCount || 0) + 1,
+            isActive: true
         };
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(keyData));
         
@@ -139,7 +234,7 @@ class AuthManager {
     logout() {
         const session = this.getSession();
         if (session && session.key) {
-            // Free up the key for other users
+            // Free up the key for other users (optional for GitHub Pages)
             const keyData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
             if (keyData[session.key]) {
                 keyData[session.key].activeSession = null;
@@ -190,7 +285,7 @@ class AuthManager {
         const session = this.getSession();
         if (!session) return false;
         
-        // Verify key is still valid and session matches
+        // Verify key is still valid
         const validation = this.validateKey(session.key);
         if (!validation.valid) return false;
         
@@ -200,6 +295,46 @@ class AuthManager {
         sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
         
         return true;
+    }
+    
+    // ADMIN FUNCTIONS for key management
+    generateMoreKeys(count = 10) {
+        const existingKeys = JSON.parse(localStorage.getItem(this.GENERATED_KEYS_KEY) || '[]');
+        const newKeys = this.generateNewKeys(count);
+        const allKeys = [...existingKeys, ...newKeys];
+        
+        localStorage.setItem(this.GENERATED_KEYS_KEY, JSON.stringify(allKeys));
+        
+        // Update key data
+        const keyData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+        newKeys.forEach(key => {
+            if (!keyData[key]) {
+                keyData[key] = {
+                    created: new Date().toISOString(),
+                    lastUsed: null,
+                    activeSession: null,
+                    usageCount: 0,
+                    isActive: true
+                };
+            }
+        });
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(keyData));
+        
+        this.validKeys = allKeys;
+        this.displayKeys();
+        
+        return newKeys;
+    }
+    
+    deactivateKey(key) {
+        const keyData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+        if (keyData[key]) {
+            keyData[key].isActive = false;
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(keyData));
+            this.displayKeys();
+            return true;
+        }
+        return false;
     }
     
     setCookie(name, value, days) {
@@ -242,6 +377,91 @@ class AudioManager {
         this.beatDecayRate = 0.92;
         this.beatThreshold = 3000;
     }
+
+    setupLogin() {
+    const loginButton = document.getElementById('loginButton');
+    const accessKeyInput = document.getElementById('accessKey');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    loginButton.addEventListener('click', () => {
+        const key = accessKeyInput.value.trim();
+        if (!key) {
+            this.showError("Please enter an access key");
+            return;
+        }
+        
+        const result = this.authManager.login(key);
+        if (result.valid) {
+            this.initializeApp();
+        } else {
+            this.showError(result.message);
+        }
+    });
+    
+    // Admin controls
+    document.getElementById('generateMoreKeys')?.addEventListener('click', () => {
+        const newKeys = this.authManager.generateMoreKeys(10);
+        alert(`Generated 10 new keys! You now have ${this.authManager.validKeys.length} total keys.`);
+    });
+    
+    document.getElementById('exportKeys')?.addEventListener('click', () => {
+        const keys = this.authManager.validKeys;
+        const keyData = JSON.parse(localStorage.getItem(this.authManager.STORAGE_KEY) || '{}');
+        
+        let exportText = "=== AUDIO VISUALIZER ACCESS KEYS ===\n\n";
+        keys.forEach(key => {
+            const info = keyData[key] || {};
+            exportText += `Key: ${key}\n`;
+            exportText += `Created: ${new Date(info.created).toLocaleString()}\n`;
+            exportText += `Used: ${info.usageCount || 0} times\n`;
+            exportText += `Status: ${info.isActive === false ? 'DEACTIVATED' : 'ACTIVE'}\n`;
+            exportText += `Last Used: ${info.lastUsed ? new Date(info.lastUsed).toLocaleString() : 'Never'}\n`;
+            exportText += "─".repeat(40) + "\n\n";
+        });
+        
+        // Create download link
+        const blob = new Blob([exportText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'audio-visualizer-keys.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+    
+    document.getElementById('deactivateKey')?.addEventListener('click', () => {
+        const keyInput = document.getElementById('keyToDeactivate');
+        const key = keyInput.value.trim().toUpperCase();
+        
+        if (!key) {
+            alert("Please enter a key to deactivate");
+            return;
+        }
+        
+        if (!this.authManager.validKeys.includes(key)) {
+            alert("Key not found in the list");
+            return;
+        }
+        
+        if (confirm(`Are you sure you want to deactivate key:\n${key}\n\nThis will prevent this key from being used to login.`)) {
+            const success = this.authManager.deactivateKey(key);
+            if (success) {
+                alert(`Key ${key} has been deactivated.`);
+                keyInput.value = '';
+            } else {
+                alert("Failed to deactivate key.");
+            }
+        }
+    });
+    
+
+    accessKeyInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            loginButton.click();
+        }
+    });
 
     async loadUrl(url) {
         if (this.sourceNode) this.disconnectSource();
