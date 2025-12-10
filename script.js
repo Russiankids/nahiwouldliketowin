@@ -6,6 +6,9 @@ class AuthManager {
         this.GENERATED_KEYS_KEY = 'audio_visualizer_generated_keys';
         this.SESSION_KEY = 'audio_visualizer_session';
         
+        // Special admin key (case-insensitive check)
+        this.ADMIN_KEY = 'AVPRO-ADMIN-2024-MASTER';
+        
         // Initialize
         this.validKeys = this.initializeKeys();
         this.displayKeys();
@@ -18,6 +21,8 @@ class AuthManager {
         if (!storedKeys) {
             // Generate 20 unique keys for the first time
             const newKeys = this.generateNewKeys(20);
+            // Add admin key to the list
+            newKeys.push(this.ADMIN_KEY);
             localStorage.setItem(this.GENERATED_KEYS_KEY, JSON.stringify(newKeys));
             storedKeys = JSON.stringify(newKeys);
             
@@ -29,7 +34,8 @@ class AuthManager {
                     lastUsed: null,
                     activeSession: null,
                     usageCount: 0,
-                    isActive: true
+                    isActive: true,
+                    isAdmin: key === this.ADMIN_KEY
                 };
             });
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(keyData));
@@ -48,7 +54,8 @@ class AuthManager {
                     lastUsed: null,
                     activeSession: null,
                     usageCount: 0,
-                    isActive: true
+                    isActive: true,
+                    isAdmin: key === this.ADMIN_KEY
                 };
                 needsUpdate = true;
             }
@@ -87,6 +94,8 @@ class AuthManager {
         }
         
         keys.forEach(key => {
+            if (key === this.ADMIN_KEY) return; // Don't show admin key in list
+            
             const keyInfo = keyData[key] || {};
             const div = document.createElement('div');
             div.className = 'key-item';
@@ -122,19 +131,34 @@ class AuthManager {
                     setTimeout(() => {
                         div.innerHTML = originalHTML;
                     }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy key:', err);
+                    // Fallback for browsers that don't support clipboard API
+                    const textArea = document.createElement('textarea');
+                    textArea.value = key;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    const originalHTML = div.innerHTML;
+                    div.innerHTML = '<span style="color: #33cc33;">✓ Copied!</span>';
+                    setTimeout(() => {
+                        div.innerHTML = originalHTML;
+                    }, 2000);
                 });
             });
             
             keyList.appendChild(div);
         });
         
-        // Add copy all button at the bottom
+        // Add copy all button at the bottom (only for admin)
         const copyAllDiv = document.createElement('div');
         copyAllDiv.innerHTML = '<hr style="border-color: rgba(255,255,255,0.1); margin: 10px 0;"><button id="copyAllKeys" style="width: 100%; padding: 8px; background: #000080; color: white; border: none; border-radius: 4px; cursor: pointer;">Copy All Keys to Clipboard</button>';
         keyList.appendChild(copyAllDiv);
         
         document.getElementById('copyAllKeys')?.addEventListener('click', () => {
-            const allKeys = keys.join('\n');
+            const allKeys = keys.filter(k => k !== this.ADMIN_KEY).join('\n');
             navigator.clipboard.writeText(allKeys).then(() => {
                 const btn = document.getElementById('copyAllKeys');
                 btn.textContent = '✓ All Keys Copied!';
@@ -191,7 +215,10 @@ class AuthManager {
             };
         }
         
-        return { valid: true, fingerprint, keyInfo };
+        // Check if this is an admin key
+        const isAdmin = key === this.ADMIN_KEY || keyInfo.isAdmin === true;
+        
+        return { valid: true, fingerprint, keyInfo, isAdmin };
     }
     
     login(key) {
@@ -208,7 +235,8 @@ class AuthManager {
             lastUsed: new Date().toISOString(),
             activeSession: validation.fingerprint,
             usageCount: (keyData[key]?.usageCount || 0) + 1,
-            isActive: true
+            isActive: true,
+            isAdmin: validation.isAdmin
         };
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(keyData));
         
@@ -217,7 +245,8 @@ class AuthManager {
             key: key,
             fingerprint: validation.fingerprint,
             loginTime: new Date().toISOString(),
-            lastActivity: new Date().toISOString()
+            lastActivity: new Date().toISOString(),
+            isAdmin: validation.isAdmin
         };
         
         // Store in both localStorage and sessionStorage for cross-checking
@@ -314,7 +343,8 @@ class AuthManager {
                     lastUsed: null,
                     activeSession: null,
                     usageCount: 0,
-                    isActive: true
+                    isActive: true,
+                    isAdmin: false
                 };
             }
         });
