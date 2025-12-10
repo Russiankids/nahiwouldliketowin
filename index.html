@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Visualizer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #D4D0C8;
+            --bg-secondary: #C0C0C0;
+            --header-blue-dark: #000080;
+            --header-blue-light: #1084D0;
+            --border-light: #FFFFFF;
+            --border-dark: #808080;
+            --text-primary: #000000;
+            --accent-color: #008080;
+            --error-color: #cc3333;
+            --success-color: #33cc33;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+
+        #page-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        #header {
+            background: linear-gradient(to bottom, var(--header-blue-light), var(--header-blue-dark));
+            padding: 15px;
+            border: 2px solid var(--border-dark);
+            border-top: 0;
+            color: white;
+            text-align: center;
+            margin: 0 10px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+
+        #header h1 {
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .login-container {
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border: 3px solid var(--header-blue-dark);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .login-container h2 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 28px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .login-container p {
+            color: #ccc;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .key-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            background: #111;
+            border: 2px solid var(--header-blue-light);
+            color: white;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+
+        .key-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .login-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: linear-gradient(to bottom, var(--header-blue-light), var(--header-blue-dark));
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        .login-button:hover {
+            background: linear-gradient(to bottom, var(--header-blue-dark), #000060);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            color: var(--error-color);
+            margin-top: 15px;
+            font-size: 14px;
+            min-height: 20px;
+            padding: 10px;
+            background: rgba(204, 51, 51, 0.1);
+            border-radius: 5px;
+            display: none;
+        }
+
+        .success-message {
+            color: var(--success-color);
+            margin-top: 15px;
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        .admin-panel {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            border: 1px solid var(--border-dark);
+        }
+
+        .admin-panel h3 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .admin-panel input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #222;
+            border: 1px solid var(--border-dark);
+            color: white;
+            border-radius: 3px;
+        }
+
+        .key-list {
+            text-align: left;
+            margin-top: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .key-list div {
+            padding: 5px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-family: monospace;
+            color: #ccc;
+        }
+
+        #main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px;
+            flex-grow: 1;
+            display: none; /* Hidden until authenticated */
+        }
+
+        #left-sidebar {
+            flex: 0 0 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #center-column {
+            flex: 1 1 500px;
+            min-width: 400px;
+        }
+
+        #right-sidebar {
+            flex: 0 0 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .panel-box {
+            background-color: var(--bg-secondary);
+            border: 2px solid;
+            border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light);
+            padding: 1px;
+            box-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+        }
+
+        .panel-header {
+            background: linear-gradient(to bottom, var(--header-blue-dark), #000060);
+            color: white;
+            font-weight: bold;
+            padding: 6px 10px;
+            border-bottom: 1px solid var(--border-dark);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .panel-content {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #visualizer-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            border: 3px inset var(--border-dark);
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        canvas, #threejs-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            background: rgba(0,0,0,0.5);
+        }
+        #overlay.hidden { display: none; }
+
+        .play-button {
+            background: linear-gradient(145deg, #555555, #777777);
+            border: 3px outset var(--border-light);
+            border-radius: 50%;
+            width: 90px;
+            height: 90px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .play-button:hover {
+            background: linear-gradient(145deg, #666666, #888888);
+            transform: scale(1.05);
+        }
+        .play-button:active {
+            border-style: inset;
+            transform: scale(0.98);
+        }
+
+        .main-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .button {
+            padding: 10px;
+            border-radius: 2px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px outset var(--border-light);
+            background: linear-gradient(to bottom, #DFDFDF, #C0C0C0);
+            transition: all 0.1s;
+            text-align: center;
+        }
+        .button:hover {
+            background: linear-gradient(to bottom, #EFEFEF, #D0D0D0);
+        }
+        .button:active {
+            border-style: inset;
+            background: linear-gradient(to bottom, #B0B0B0, #A0A0A0);
+        }
+        .button.stop-recording {
+            background: linear-gradient(to bottom, #FFCC66, #FF9933);
+        }
+        .logout-button {
+            background: linear-gradient(to bottom, #ff6666, #cc3333);
+            color: white;
+        }
+        .logout-button:hover {
+            background: linear-gradient(to bottom, #ff7777, #dd4444);
+        }
+        .download-link {
+            text-align: center;
+            color: var(--accent-color);
+            text-decoration: none;
+            padding: 8px;
+            display: none;
+            font-weight: bold;
+        }
+        .download-link:hover {
+            text-decoration: underline;
+        }
+
+        #preview-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            border: 2px inset var(--border-dark);
+            overflow: hidden;
+        }
+
+        #preview-canvas, #threejs-preview-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        details {
+            background-color: var(--bg-primary);
+            border: 2px groove var(--border-dark);
+            padding: 8px;
+            margin-bottom: 8px;
+        }
+        summary {
+            font-weight: bold;
+            cursor: pointer;
+            list-style: none;
+            padding: 4px;
+            user-select: none;
+        }
+        summary::-webkit-details-marker { display: none; }
+        summary::before {
+            content: '▶';
+            margin-right: 0.5rem;
+            display: inline-block;
+            transition: transform 0.2s;
+            font-size: 10px;
+        }
+        details[open] > summary::before { transform: rotate(90deg); }
+
+        .control-group-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .control-group label {
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .control-group input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 20px;
+            background: linear-gradient(to bottom, #999999, #CCCCCC);
+            border: 2px inset #777;
+            cursor: pointer;
+        }
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 24px;
+            background: linear-gradient(to bottom, #DFDFDF, #B0B0B0);
+            cursor: pointer;
+            border: 2px outset var(--border-light);
+        }
+        .control-group input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 24px;
+            background: linear-gradient(to bottom, #DFDFDF, #B0B0B0);
+            cursor: pointer;
+            border: 2px outset var(--border-light);
+            border-radius: 0;
+        }
+        .control-group input[type="color"] {
+            width: 100%;
+            height: 32px;
+            border: 2px inset var(--border-dark);
+            cursor: pointer;
+        }
+        .control-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 4px;
+            transition: background 0.1s;
+        }
+        .radio-group label:hover {
+            background: rgba(0,0,0,0.05);
+        }
+        .radio-group input[type="radio"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        #footer {
+            text-align: center;
+            padding: 12px;
+            margin: 0 10px;
+            border: 2px solid var(--border-dark);
+            border-bottom: 0;
+            background: linear-gradient(to bottom, #C0C0C0, #A0A0A0);
+            font-size: 12px;
+            color: #333;
+            display: none; /* Hidden until authenticated */
+        }
+
+        @media (max-width: 1024px) {
+            #left-sidebar, #right-sidebar {
+                flex: 1 1 100%;
+            }
+            #center-column {
+                flex: 1 1 100%;
+            }
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff00;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 11px;
+            z-index: 100;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div id="login-overlay">
+        <div class="login-container">
+            <h2>🔐 Audio Visualizer</h2>
+            <p>Enter your access key to use the visualizer. Each key can only be used from one browser at a time.</p>
+            
+            <input type="text" id="accessKey" class="key-input" placeholder="Enter your access key" autocomplete="off">
+            <button id="loginButton" class="login-button">Access Visualizer</button>
+            
+            <div id="errorMessage" class="error-message"></div>
+            
+            <div class="admin-panel">
+                <h3>🔑 Admin Panel (Generated Keys)</h3>
+                <div class="key-list" id="keyList">
+                    <!-- Keys will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-container">
+        <div id="header">
+            <h1>Audio Visualizer Pro</h1>
+        </div>
+
+        <div id="main-content">
+            <div id="left-sidebar">
+                <div class="panel-box">
+                    <div class="panel-header">Audio Controls</div>
+                    <div class="panel-content">
+                        <div class="main-controls">
+                            <button id="addFileButton" class="button">Load Audio File</button>
+                            <button id="micButton" class="button">Use Microphone</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-box">
+                    <div class="panel-header">Recording</div>
+                    <div class="panel-content">
+                        <button id="recordButton" class="button">Record</button>
+                        <a id="downloadLink" class="download-link" download="visualizer-recording.webm">Download Recording</a>
+                    </div>
+                </div>
+
+                <div class="panel-box">
+                    <div class="panel-header">View Options</div>
+                    <div class="panel-content">
+                        <button id="fullscreenButton" class="button">⛶ Fullscreen</button>
+                        <button id="logoutButton" class="button logout-button">Logout</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="center-column">
+                <div class="panel-box" style="height: 100%;">
+                    <div class="panel-header">Main Visualizer</div>
+                    <div id="visualizer-container">
+                        <canvas id="canvas"></canvas>
+                        <div id="threejs-container"></div>
+                        <div id="overlay">
+                            <button id="play-button" class="play-button" aria-label="Start Visualizer">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M8 5v14l11-7z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="right-sidebar">
+                <div class="panel-box">
+                    <div class="panel-header">Live Preview</div>
+                    <div id="preview-container" class="panel-content" style="padding: 0;">
+                        <canvas id="preview-canvas"></canvas>
+                        <div id="threejs-preview-container"></div>
+                    </div>
+                </div>
+
+                <div class="customization-panel panel-box">
+                    <div class="panel-header">Customization</div>
+                    <div class="panel-content">
+                        <details open>
+                            <summary>Visualization Mode</summary>
+                            <div class="control-group-grid">
+                                <div class="control-group radio-group" id="mode-selector">
+                                    <label><input type="radio" name="visualizerMode" value="circular" checked> Circular Spectrum</label>
+                                    <label><input type="radio" name="visualizerMode" value="linear"> Linear Bars</label>
+                                    <label><input type="radio" name="visualizerMode" value="reflected"> Reflected Bars</label>
+                                    <label><input type="radio" name="visualizerMode" value="flower"> Flower Petals</label>
+                                    <label><input type="radio" name="visualizerMode" value="particle"> Particle Field</label>
+                                    <label><input type="radio" name="visualizerMode" value="waveform"> Waveform</label>
+                                    <label><input type="radio" name="visualizerMode" value="galaxy"> Galaxy Spiral</label>
+                                    <label><input type="radio" name="visualizerMode" value="threeD"> 3D Spectrum</label>
+                                    <label><input type="radio" name="visualizerMode" value="radial"> Radial Burst</label>
+                                    <label><input type="radio" name="visualizerMode" value="dna"> DNA Helix</label>
+                                    <label><input type="radio" name="visualizerMode" value="imageJumper"> Image Jumper</label>
+                                    <label><input type="radio" name="visualizerMode" value="imageScreensaver"> Image Screensaver</label>
+                                    <label><input type="radio" name="visualizerMode" value="imageDancer"> Image Dancer</label>
+                                </div>
+                            </div>
+                        </details>
+
+                        <details>
+                            <summary>Beat Detection</summary>
+                            <div class="control-group-grid">
+                                <div class="control-group">
+                                    <label for="beatThresholdSlider">Sensitivity: <span id="beatThresholdValue">3000</span></label>
+                                    <input type="range" id="beatThresholdSlider" min="1000" max="8000" value="3000" step="100">
+                                </div>
+                                <div class="control-group">
+                                    <label for="beatColorPicker">Beat Flash Color:</label>
+                                    <input type="color" id="beatColorPicker" value="#ff0000">
+                                </div>
+                            </div>
+                        </details>
+
+                        <div id="mode-settings"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="footer">
+            <p><span class="status-indicator"></span>Made by Noctis with love💗 | Key: <span id="currentKeyDisplay"></span></p>
+        </div>
+    </div>
+
+    <input type="file" id="audioFileInput" accept="audio/*" style="display: none;">
+    <input type="file" id="imageFileInput" accept="image/*" style="display: none;">
+
+    <script>
+        if (typeof THREE === 'undefined') {
+            console.error('Three.js failed to load from CDN. Please check your internet connection.');
+            document.write('<script src="https://unpkg.com/three@0.128.0/build/three.min.js"><\/script>');
+        }
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
