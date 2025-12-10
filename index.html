@@ -32,25 +32,6 @@
             font-size: 13px;
         }
 
-
-        .admin-controls .button {
-            transition: all 0.2s;
-            font-weight: bold;
-        }
-
-        .admin-controls .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
-
-        .key-item {
-            border-left: 3px solid #1084D0;
-            padding-left: 10px !important;
-        }
-
-        .key-item:hover {
-            border-left-color: #00ff00;
-        }
         #page-container {
             display: flex;
             flex-direction: column;
@@ -524,6 +505,25 @@
             z-index: 100;
         }
 
+        .admin-controls .button {
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .admin-controls .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .key-item {
+            border-left: 3px solid #1084D0;
+            padding-left: 10px !important;
+        }
+
+        .key-item:hover {
+            border-left-color: #00ff00;
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -534,40 +534,46 @@
     <div id="login-overlay">
         <div class="login-container">
             <h2>🔐 Audio Visualizer</h2>
-            <p>Enter your access key to use the visualizer. Each key can only be used from one browser at a time.</p>
+            <p>Enter your access key to use the visualizer. Keys are generated when you first visit the site.</p>
             
             <input type="text" id="accessKey" class="key-input" placeholder="Enter your access key" autocomplete="off">
             <button id="loginButton" class="login-button">Access Visualizer</button>
             
             <div id="errorMessage" class="error-message"></div>
             
-<div class="admin-controls" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-    <h4 style="color: white; margin-bottom: 10px;">📊 Key Management</h4>
-    
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-        <button id="generateMoreKeys" class="button" style="padding: 8px; background: #000080; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Generate 10 More Keys
-        </button>
-        <button id="exportKeys" class="button" style="padding: 8px; background: #008080; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Export All Keys
-        </button>
-    </div>
-    
-    <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <input type="text" id="keyToDeactivate" placeholder="Enter key to deactivate" style="flex: 1; padding: 8px; background: #222; border: 1px solid #444; color: white; border-radius: 4px;">
-        <button id="deactivateKey" class="button" style="padding: 8px 12px; background: #cc3333; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Deactivate
-        </button>
-    </div>
-    
-    <div style="margin-top: 10px; font-size: 11px; color: #aaa;">
-        <p><strong>How to use:</strong></p>
-        <p>1. Keys are generated once when you first visit</p>
-        <p>2. Click any key to copy it to clipboard</p>
-        <p>3. Share keys with users who need access</p>
-        <p>4. Deactivate keys that are compromised</p>
-    </div>
-</div>
+            <div class="admin-panel">
+                <h3>🔑 Admin Panel (Generated Keys)</h3>
+                <div class="key-list" id="keyList">
+                    <!-- Keys will be generated here -->
+                </div>
+                
+                <div class="admin-controls" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <h4 style="color: white; margin-bottom: 10px;">📊 Key Management</h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <button id="generateMoreKeys" class="button" style="padding: 8px; background: #000080; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            Generate 10 More Keys
+                        </button>
+                        <button id="exportKeys" class="button" style="padding: 8px; background: #008080; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            Export All Keys
+                        </button>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <input type="text" id="keyToDeactivate" placeholder="Enter key to deactivate" style="flex: 1; padding: 8px; background: #222; border: 1px solid #444; color: white; border-radius: 4px;">
+                        <button id="deactivateKey" class="button" style="padding: 8px 12px; background: #cc3333; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            Deactivate
+                        </button>
+                    </div>
+                    
+                    <div style="margin-top: 10px; font-size: 11px; color: #aaa;">
+                        <p><strong>How to use:</strong></p>
+                        <p>1. Keys are generated once when you first visit</p>
+                        <p>2. Click any key to copy it to clipboard</p>
+                        <p>3. Share keys with users who need access</p>
+                        <p>4. Deactivate keys that are compromised</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
