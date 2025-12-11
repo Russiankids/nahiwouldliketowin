@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audio Visualizer</title>
-    <!-- Changed Three.js CDN to avoid tracking prevention issues -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
     <style>
         :root {
@@ -203,7 +202,7 @@
             gap: 10px;
             padding: 10px;
             flex-grow: 1;
-            display: none; /* Hidden until authenticated */
+            display: none;
         }
 
         #left-sidebar {
@@ -472,7 +471,7 @@
             background: linear-gradient(to bottom, #C0C0C0, #A0A0A0);
             font-size: 12px;
             color: #333;
-            display: none; /* Hidden until authenticated */
+            display: none;
         }
 
         @media (max-width: 1024px) {
@@ -545,7 +544,7 @@
 <body>
     <div id="login-overlay">
         <div class="login-container">
-            <h2>🔐 Audio Visualizer</h2>
+            <h2>🔒 Audio Visualizer</h2>
             <p>Enter your access key to use the visualizer. Keys are generated when you first visit the site.</p>
             
             <input type="text" id="accessKey" class="key-input" placeholder="Enter your access key" autocomplete="off">
@@ -555,9 +554,7 @@
             
             <div class="admin-panel" id="adminPanel" style="display: none;">
                 <h3>🔑 Admin Panel (Generated Keys)</h3>
-                <div class="key-list" id="keyList">
-                    <!-- Keys will be generated here -->
-                </div>
+                <div class="key-list" id="keyList"></div>
                 
                 <div class="admin-controls">
                     <h4>📊 Key Management</h4>
@@ -668,8 +665,11 @@
                                     <label><input type="radio" name="visualizerMode" value="radial"> Radial Burst</label>
                                     <label><input type="radio" name="visualizerMode" value="dna"> DNA Helix</label>
                                     <label><input type="radio" name="visualizerMode" value="imageJumper"> Image Jumper</label>
-                                    <label><input type="radio" name="visualizerMode" value="imageScreensaver"> Image Screensaver</label>
-                                    <label><input type="radio" name="visualizerMode" value="imageDancer"> Image Dancer</label>
+                                    <label><input type="radio" name="visualizerMode" value="imageBounce"> Image Bounce</label>
+                                    <label><input type="radio" name="visualizerMode" value="imageRain"> Image Rain</label>
+                                    <label><input type="radio" name="visualizerMode" value="imageKaleidoscope"> Image Kaleidoscope</label>
+                                    <label><input type="radio" name="visualizerMode" value="imagePulse"> Image Pulse Grid</label>
+                                    <label><input type="radio" name="visualizerMode" value="imageOrbit"> Image Orbit</label>
                                 </div>
                             </div>
                         </details>
