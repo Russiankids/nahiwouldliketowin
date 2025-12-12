@@ -7,6 +7,7 @@ class AuthManager {
         this.validKeys = this.initializeKeys();
         this.displayKeys();
     }
+    
     initializeKeys() {
         let storedKeys = sessionStorage.getItem(this.GENERATED_KEYS_KEY);
         if (!storedKeys) {
@@ -32,6 +33,7 @@ class AuthManager {
         if (needsUpdate) sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(keyData));
         return keys;
     }
+    
     generateNewKeys(count) {
         const keys = [];
         for (let i = 0; i < count; i++) {
@@ -42,6 +44,7 @@ class AuthManager {
         }
         return keys;
     }
+    
     displayKeys() {
         const keyList = document.getElementById('keyList');
         if (!keyList) return;
@@ -100,6 +103,7 @@ class AuthManager {
             });
         });
     }
+    
     generateBrowserFingerprint() {
         const components = [navigator.userAgent, navigator.language, navigator.hardwareConcurrency, screen.width + 'x' + screen.height, new Date().getTimezoneOffset()];
         const combined = components.join('|');
@@ -111,6 +115,7 @@ class AuthManager {
         }
         return hash.toString(36) + Math.random().toString(36).substring(2, 9);
     }
+    
     validateKey(key) {
         key = key.trim().toUpperCase();
         if (!this.validKeys.includes(key)) return { valid: false, message: "Invalid access key" };
@@ -121,6 +126,7 @@ class AuthManager {
         const isAdmin = key === this.ADMIN_KEY || keyInfo.isAdmin === true;
         return { valid: true, fingerprint, keyInfo, isAdmin };
     }
+    
     login(key) {
         const validation = this.validateKey(key);
         if (!validation.valid) return validation;
@@ -132,6 +138,7 @@ class AuthManager {
         this.displayKeys();
         return { valid: true, session };
     }
+    
     logout() {
         const session = this.getSession();
         if (session && session.key) {
@@ -144,6 +151,7 @@ class AuthManager {
         sessionStorage.removeItem(this.SESSION_KEY);
         window.location.reload();
     }
+    
     getSession() {
         const sessionSession = sessionStorage.getItem(this.SESSION_KEY);
         try {
@@ -152,6 +160,7 @@ class AuthManager {
             return null;
         }
     }
+    
     verifySession() {
         const session = this.getSession();
         if (!session) return false;
@@ -161,6 +170,7 @@ class AuthManager {
         sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
         return true;
     }
+    
     generateMoreKeys(count = 10) {
         const existingKeys = JSON.parse(sessionStorage.getItem(this.GENERATED_KEYS_KEY) || '[]');
         const newKeys = this.generateNewKeys(count);
@@ -175,6 +185,7 @@ class AuthManager {
         this.displayKeys();
         return newKeys;
     }
+    
     deactivateKey(key) {
         const keyData = JSON.parse(sessionStorage.getItem(this.STORAGE_KEY) || '{}');
         if (keyData[key]) {
@@ -265,7 +276,6 @@ class Renderer {
         this.previewCanvas = document.getElementById('preview-canvas');
         this.previewCtx = this.previewCanvas.getContext('2d');
         this.threeJsPreviewContainer = document.getElementById('threejs-preview-container');
-        this.customImage = null;
         this.initializeModes();
         this.currentMode = this.modes.circular;
         this.beatColor = '#ff0000';
@@ -545,659 +555,830 @@ class FlowerMode extends Mode {
         ctx.shadowBlur = 0;
     }
     drawPetal(ctx, cx, cy, angle, radius, length) {
-        const startX = cx + radius * Math.cos(angle);
-        const startY = cy + radius * Math.sin(angle);
-        const cp1X = cx + (radius + length * 0.5) * Math.cos(angle - 0.2);
-        const cp1Y = cy + (radius + length * 0.5) * Math.sin(angle - 0.2);
-        const cp2X = cx + (radius + length * 0.5) * Math.cos(angle + 0.2);
-        const cp2Y = cy + (radius + length * 0.5) * Math.sin(angle + 0.2);
-        const endX = cx + (radius + length) * Math.cos(angle);
-        const endY = cy + (radius + length) * Math.sin(angle);
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.quadraticCurveTo(cp1X, cp1Y, endX, endY);
-        ctx.quadraticCurveTo(cp2X, cp2Y, startX, startY);
-        ctx.fill();
-        ctx.stroke();
-    }
+        const tipX = cx + (radius + length<function_calls>
+<invoke name="artifacts">
+<parameter name="command">update</parameter>
+<parameter name="id">audio_viz_js</parameter>
+<parameter name="old_str">    drawPetal(ctx, cx, cy, angle, radius, length) {
+const tipX = cx + (radius + length</parameter>
+<parameter name="new_str">    drawPetal(ctx, cx, cy, angle, radius, length) {
+const tipX = cx + (radius + length) * Math.cos(angle);
+const tipY = cy + (radius + length) * Math.sin(angle);
+const anchorX = cx + radius * Math.cos(angle);
+const anchorY = cy + radius * Math.sin(angle);
+const controlAngleOffset = 0.3 / (length / 250);
+const controlDist = radius + length / 1.5;
+const cp1x = cx + controlDist * Math.cos(angle - controlAngleOffset);
+const cp1y = cy + controlDist * Math.sin(angle - controlAngleOffset);
+const cp2x = cx + controlDist * Math.cos(angle + controlAngleOffset);
+const cp2y = cy + controlDist * Math.sin(angle + controlAngleOffset);
+ctx.beginPath();
+ctx.moveTo(anchorX, anchorY);
+ctx.quadraticCurveTo(cp1x, cp1y, tipX, tipY);
+ctx.quadraticCurveTo(cp2x, cp2y, anchorX, anchorY);
+ctx.fill();
+ctx.stroke();
 }
-
+}
 class ParticleMode extends Mode {
-    constructor(renderer) {
-        super(renderer, 'particle');
-        this.particles = [];
-        this.maxParticles = 200;
-        this.settings = { speed: 2, color: '#ffffff' };
-    }
-    init() {
-        this.particles = [];
-        for(let i=0; i<this.maxParticles; i++) {
-            this.particles.push(this.createParticle());
-        }
-    }
-    createParticle() {
-        return {
-            x: Math.random() * this.renderer.canvas.width,
-            y: Math.random() * this.renderer.canvas.height,
-            size: Math.random() * 3 + 1,
-            vx: (Math.random() - 0.5) * 2,
-            vy: (Math.random() - 0.5) * 2,
-            life: Math.random()
-        };
-    }
-    renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        const blendedColor = this.renderer.blendColors(this.settings.color, this.renderer.beatColor, beatEffect);
-        ctx.fillStyle = blendedColor;
-        
-        const bass = frequencyData.slice(0, 10).reduce((a,b)=>a+b,0) / 10;
-        const speedMult = 1 + (bass / 255) * 5 * beatEffect;
-
-        this.particles.forEach(p => {
-            p.x += p.vx * speedMult;
-            p.y += p.vy * speedMult;
-            p.life -= 0.01;
-
-            if (p.x < 0 || p.x > canvas.width || p.y < 0 || p.y > canvas.height || p.life <= 0) {
-                Object.assign(p, this.createParticle());
-                p.x = canvas.width / 2;
-                p.y = canvas.height / 2;
-            }
-
-            const size = p.size * (1 + beatEffect);
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, size, 0, Math.PI*2);
-            ctx.fill();
-        });
-    }
+constructor(renderer) {
+super(renderer, 'particle');
+this.settings = { particleCount: 400, particleSize: 3, particleColor: '#00ffff' };
+this.particles = [];
 }
-
-class WaveformMode extends Mode {
-    constructor(renderer) {
-        super(renderer, 'waveform');
-        this.settings = { color: '#00ff00', lineWidth: 2 };
-    }
-    renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.lineWidth = this.settings.lineWidth * (1 + beatEffect);
-        ctx.strokeStyle = this.renderer.blendColors(this.settings.color, this.renderer.beatColor, beatEffect);
-        ctx.shadowBlur = 4;
-        ctx.shadowColor = ctx.strokeStyle;
-        
-        ctx.beginPath();
-        const sliceWidth = canvas.width * 1.0 / timeDomainData.length;
-        let x = 0;
-        for(let i = 0; i < timeDomainData.length; i++) {
-            const v = timeDomainData[i] / 128.0;
-            const y = v * canvas.height / 2;
-            if(i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-            x += sliceWidth;
-        }
-        ctx.lineTo(canvas.width, canvas.height/2);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-    }
+init() {
+super.init();
+this.particles = [];
 }
-
-class GalaxyMode extends Mode {
-    constructor(renderer) {
-        super(renderer, 'galaxy');
-        this.angle = 0;
-    }
-    renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
-        ctx.fillStyle = 'rgba(0,0,0,0.1)';
-        ctx.fillRect(0,0,canvas.width, canvas.height);
-        const cx = canvas.width/2;
-        const cy = canvas.height/2;
-        this.angle += 0.01 + beatEffect * 0.05;
-        
-        const arms = 5;
-        const particlesPerArm = 50;
-        const maxRadius = Math.min(canvas.width, canvas.height) * 0.45;
-
-        for(let i=0; i<arms; i++) {
-            const armAngle = (i/arms) * Math.PI * 2;
-            for(let j=0; j<particlesPerArm; j++) {
-                const dist = (j/particlesPerArm) * maxRadius;
-                const freqIdx = Math.floor((j/particlesPerArm) * frequencyData.length * 0.5);
-                const amp = frequencyData[freqIdx];
-                const theta = this.angle + armAngle + (dist * 0.02);
-                
-                const x = cx + Math.cos(theta) * dist;
-                const y = cy + Math.sin(theta) * dist;
-                
-                const size = (amp/255) * 4 * (1+beatEffect) + 1;
-                ctx.fillStyle = `hsl(${(i * 60) + amp}, 100%, 50%)`;
-                ctx.beginPath();
-                ctx.arc(x, y, size, 0, Math.PI*2);
-                ctx.fill();
-            }
-        }
-    }
+updateSetting(key, value) {
+super.updateSetting(key, value);
+if (key === 'particleCount') this.init();
 }
-
-class ThreeDMode extends Mode {
-    constructor(renderer) {
-        super(renderer, 'threeD');
-        this.scene = null;
-        this.camera = null;
-        this.renderer3D = null;
-        this.bars = [];
-        this.group = null;
-    }
-    init() {
-        const container = this.renderer.threeJsContainer;
-        const width = container.clientWidth;
-        const height = container.clientHeight;
-        
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, width/height, 0.1, 1000);
-        this.camera.position.z = 50;
-        this.camera.position.y = 20;
-        this.camera.lookAt(0,0,0);
-
-        this.renderer3D = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-        this.renderer3D.setSize(width, height);
-        this.renderer3D.setClearColor(0x000000, 0);
-        
-        container.innerHTML = '';
-        container.appendChild(this.renderer3D.domElement);
-
-        const previewContainer = this.renderer.threeJsPreviewContainer;
-        if (previewContainer) {
-            this.previewRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-            this.previewRenderer.setSize(previewContainer.clientWidth, previewContainer.clientHeight);
-            this.previewRenderer.setClearColor(0x000000, 0);
-            previewContainer.innerHTML = '';
-            previewContainer.appendChild(this.previewRenderer.domElement);
-        }
-
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, specular: 0xffffff });
-        
-        this.group = new THREE.Group();
-        this.bars = [];
-        const gridSize = 16;
-        for(let x=0; x<gridSize; x++) {
-            for(let z=0; z<gridSize; z++) {
-                const bar = new THREE.Mesh(geometry, material.clone());
-                bar.position.set(x - gridSize/2, 0, z - gridSize/2);
-                this.group.add(bar);
-                this.bars.push(bar);
-            }
-        }
-        this.scene.add(this.group);
-
-        const light = new THREE.PointLight(0xffffff, 1, 100);
-        light.position.set(10, 20, 10);
-        this.scene.add(light);
-        this.scene.add(new THREE.AmbientLight(0x404040));
-    }
-
-    draw(frequencyData, timeDomainData, beatEffect) {
-        if(!this.scene || !this.bars.length) return;
-        
-        this.group.rotation.y += 0.005 + beatEffect * 0.01;
-        
-        let fdIndex = 0;
-        for(let i=0; i<this.bars.length; i++) {
-            const val = frequencyData[fdIndex % 128];
-            const scaleY = Math.max(0.1, (val / 10) * (1 + beatEffect));
-            this.bars[i].scale.y = scaleY;
-            this.bars[i].position.y = scaleY / 2;
-            this.bars[i].material.color.setHSL(val/255, 1, 0.5);
-            fdIndex++;
-        }
-        
-        this.renderer3D.render(this.scene, this.camera);
-        if (this.previewRenderer) {
-             this.previewRenderer.render(this.scene, this.camera);
-        }
-    }
-    onResize(width, height) {
-        if(this.camera && this.renderer3D) {
-            this.camera.aspect = width / height;
-            this.camera.updateProjectionMatrix();
-            this.renderer3D.setSize(width, height);
-            
-            const pCont = this.renderer.threeJsPreviewContainer;
-            if(pCont && this.previewRenderer) {
-                this.previewRenderer.setSize(pCont.clientWidth, pCont.clientHeight);
-            }
-        }
-    }
-    cleanup() {
-        const container = this.renderer.threeJsContainer;
-        container.innerHTML = '';
-        const pCont = this.renderer.threeJsPreviewContainer;
-        if(pCont) pCont.innerHTML = '';
-        this.renderer3D = null;
-        this.previewRenderer = null;
-    }
+renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
+if (!this.initialized || this.particles.length !== this.settings.particleCount) {
+this.particles = [];
+const { width, height } = canvas;
+for (let i = 0; i < this.settings.particleCount; i++) {
+this.particles.push({x: Math.random() * width, y: Math.random() * height, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, energy: Math.random()});
 }
-
-class RadialMode extends Mode {
-    constructor(renderer) {
-        super(renderer, 'radial');
-    }
-    renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
-        ctx.fillStyle = 'rgba(0,0,0,0.15)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        const cx = canvas.width/2;
-        const cy = canvas.height/2;
-        const radius = Math.min(cx, cy) - 20;
-        const bars = 180;
-        const step = (Math.PI * 2) / bars;
-        
-        for(let i=0; i<bars; i++) {
-            const val = frequencyData[i] || 0;
-            const barLen = (val / 255) * radius * (0.5 + beatEffect * 0.5);
-            const angle = i * step;
-            
-            ctx.strokeStyle = `hsl(${i * 2}, 100%, 50%)`;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.lineTo(cx + Math.cos(angle) * barLen, cy + Math.sin(angle) * barLen);
-            ctx.stroke();
-        }
-    }
+if (canvas === this.renderer.canvas) this.initialized = true;
 }
-
-class DNAMode extends Mode {
-    constructor(renderer) {
-        super(renderer, 'dna');
-        this.offset = 0;
-    }
-    renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
-        ctx.fillStyle = 'rgba(0,0,0,0.1)';
-        ctx.fillRect(0,0,canvas.width, canvas.height);
-        this.offset += 0.05 + beatEffect * 0.1;
-        
-        const points = 50;
-        const spacing = canvas.width / points;
-        const amp = canvas.height / 4;
-        const cy = canvas.height / 2;
-        
-        for(let i=0; i<points; i++) {
-            const freq = frequencyData[i*2] / 255;
-            const y1 = cy + Math.sin(i * 0.5 + this.offset) * amp * (0.5 + freq);
-            const y2 = cy + Math.sin(i * 0.5 + this.offset + Math.PI) * amp * (0.5 + freq);
-            const x = i * spacing;
-            
-            ctx.strokeStyle = '#00ffff';
-            ctx.beginPath();
-            ctx.moveTo(x, y1);
-            ctx.lineTo(x, y2);
-            ctx.stroke();
-            
-            ctx.fillStyle = '#ff00ff';
-            ctx.beginPath();
-            ctx.arc(x, y1, 5 + freq * 10, 0, Math.PI*2);
-            ctx.fill();
-            
-            ctx.fillStyle = '#00ff00';
-            ctx.beginPath();
-            ctx.arc(x, y2, 5 + freq * 10, 0, Math.PI*2);
-            ctx.fill();
-        }
-    }
-}
-
-class ImageJumperMode extends Mode {
-    constructor(renderer) {
-        super(renderer, 'imageJumper');
-    }
-    renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const img = this.renderer.customImage;
-        if(!img) {
-            ctx.fillStyle = 'white';
-            ctx.fillText("No Image Loaded", canvas.width/2 - 40, canvas.height/2);
-            return;
-        }
-        
-        const bass = frequencyData[5]; 
-        const jump = (bass / 255) * canvas.height * 0.5;
-        const w = 200 * (1 + beatEffect * 0.2);
-        const h = 200 * (1 + beatEffect * 0.2);
-        const x = (canvas.width - w) / 2;
-        const y = canvas.height - h - jump;
-        
-        ctx.drawImage(img, x, y, w, h);
-    }
-}
-
-class ImageBounceMode extends Mode {
-    constructor(renderer) {
-        super(renderer, 'imageBounce');
-        this.x = 0;
-        this.y = 0;
-        this.vx = 5;
-        this.vy = 5;
-    }
-    renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
-        ctx.fillStyle = 'rgba(0,0,0,0.1)';
-        ctx.fillRect(0,0,canvas.width, canvas.height);
-        const img = this.renderer.customImage;
-        if(!img) return;
-
-        const size = 100 * (1 + beatEffect * 0.5);
-        this.x += this.vx * (1 + beatEffect);
-        this.y += this.vy * (1 + beatEffect);
-
-        if(this.x <= 0 || this.x + size >= canvas.width) this.vx *= -1;
-        if(this.y <= 0 || this.y + size >= canvas.height) this.vy *= -1;
-
-        ctx.drawImage(img, this.x, this.y, size, size);
-    }
-}
-
-class ImageRainMode extends Mode {
-    constructor(renderer) {
-        super(renderer, 'imageRain');
-        this.drops = [];
-    }
-    renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.fillRect(0,0,canvas.width, canvas.height);
-        const img = this.renderer.customImage;
-        if(!img) return;
-
-        if(Math.random() < 0.2 + beatEffect) {
-            this.drops.push({
-                x: Math.random() * canvas.width,
-                y: -50,
-                speed: 5 + Math.random() * 10
-            });
-        }
-
-        for(let i=this.drops.length-1; i>=0; i--) {
-            const d = this.drops[i];
-            d.y += d.speed;
-            const size = 50;
-            ctx.drawImage(img, d.x, d.y, size, size);
-            if(d.y > canvas.height) this.drops.splice(i, 1);
-        }
-    }
-}
-
-class ImageKaleidoscopeMode extends Mode {
-    constructor(renderer) {
-        super(renderer, 'imageKaleidoscope');
-        this.angle = 0;
-    }
-    renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
-        const img = this.renderer.customImage;
-        if(!img) return;
-        
-        ctx.fillStyle = 'rgba(0,0,0,0.1)';
-        ctx.fillRect(0,0,canvas.width, canvas.height);
-        
-        const cx = canvas.width/2;
-        const cy = canvas.height/2;
-        this.angle += 0.01 + beatEffect * 0.05;
-        const slices = 8;
-        const radius = Math.min(cx, cy);
-
-        for(let i=0; i<slices; i++) {
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.rotate(this.angle + (i * Math.PI * 2 / slices));
-            ctx.beginPath();
-            ctx.moveTo(0,0);
-            ctx.arc(0, 0, radius, -0.2, 0.2);
-            ctx.clip();
-            ctx.drawImage(img, -100, -100, 200 + beatEffect*100, 200 + beatEffect*100);
-            ctx.restore();
-        }
-    }
-}
-
-class ImagePulseMode extends Mode {
-    constructor(renderer) {
-        super(renderer, 'imagePulse');
-    }
-    renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
-        ctx.clearRect(0,0,canvas.width, canvas.height);
-        const img = this.renderer.customImage;
-        if(!img) return;
-
-        const cols = 5;
-        const rows = 5;
-        const w = canvas.width / cols;
-        const h = canvas.height / rows;
-
-        for(let i=0; i<cols; i++) {
-            for(let j=0; j<rows; j++) {
-                const idx = (i + j) % 32;
-                const scale = (frequencyData[idx] / 255);
-                const dw = w * scale;
-                const dh = h * scale;
-                const dx = i * w + (w - dw)/2;
-                const dy = j * h + (h - dh)/2;
-                ctx.drawImage(img, dx, dy, dw, dh);
-            }
-        }
-    }
-}
-
-class ImageOrbitMode extends Mode {
-    constructor(renderer) {
-        super(renderer, 'imageOrbit');
-        this.angle = 0;
-    }
-    renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
-        ctx.fillStyle = 'rgba(0,0,0,0.1)';
-        ctx.fillRect(0,0,canvas.width, canvas.height);
-        const img = this.renderer.customImage;
-        if(!img) return;
-
-        this.angle += 0.02 + beatEffect * 0.05;
-        const cx = canvas.width/2;
-        const cy = canvas.height/2;
-        const count = 8;
-        const radius = 150 + beatEffect * 50;
-
-        for(let i=0; i<count; i++) {
-            const theta = this.angle + (i/count) * Math.PI * 2;
-            const x = cx + Math.cos(theta) * radius;
-            const y = cy + Math.sin(theta) * radius;
-            const size = 40 + (frequencyData[i*4]/255) * 40;
-            ctx.drawImage(img, x - size/2, y - size/2, size, size);
-        }
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const authManager = new AuthManager();
-    const audioManager = new AudioManager();
-    const renderer = new Renderer(audioManager);
-    
-    let animationFrameId;
-    let mediaRecorder;
-    let recordedChunks = [];
-
-    const overlay = document.getElementById('login-overlay');
-    const accessKeyInput = document.getElementById('accessKey');
-    const loginButton = document.getElementById('loginButton');
-    const errorMsg = document.getElementById('errorMessage');
-    const adminPanel = document.getElementById('adminPanel');
-    const mainContent = document.getElementById('main-content');
-    const currentKeyDisplay = document.getElementById('currentKeyDisplay');
-
-    function checkLogin(key) {
-        if(!key) {
-             const savedSession = authManager.verifySession();
-             if(savedSession) {
-                 const sess = authManager.getSession();
-                 proceedToApp(sess);
-             }
-             return;
-        }
-        const result = authManager.login(key);
-        if(result.valid) {
-            proceedToApp(result.session);
-        } else {
-            errorMsg.textContent = result.message;
-            errorMsg.style.display = 'block';
-        }
-    }
-
-    function proceedToApp(session) {
-        overlay.style.display = 'none';
-        mainContent.style.display = 'flex';
-        currentKeyDisplay.textContent = session.key;
-        renderer.resize();
-        
-        if(session.isAdmin) {
-             adminPanel.style.display = 'block';
-        }
-        startLoop();
-    }
-
-    loginButton.addEventListener('click', () => checkLogin(accessKeyInput.value));
-    accessKeyInput.addEventListener('keypress', (e) => {
-        if(e.key === 'Enter') checkLogin(accessKeyInput.value);
-    });
-
-    document.getElementById('logoutButton').addEventListener('click', () => {
-        authManager.logout();
-    });
-
-    if(authManager.verifySession()) {
-        proceedToApp(authManager.getSession());
-    }
-
-    document.getElementById('generateMoreKeys')?.addEventListener('click', () => {
-        authManager.generateMoreKeys(10);
-    });
-
-    document.getElementById('deactivateKey')?.addEventListener('click', () => {
-        const key = document.getElementById('keyToDeactivate').value;
-        if(key && authManager.deactivateKey(key)) {
-            alert('Key deactivated');
-            document.getElementById('keyToDeactivate').value = '';
-        } else {
-            alert('Key not found');
-        }
-    });
-
-    document.getElementById('exportKeys')?.addEventListener('click', () => {
-        const keys = sessionStorage.getItem(authManager.STORAGE_KEY);
-        const blob = new Blob([keys], {type: 'application/json'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'avpro_keys_export.json';
-        a.click();
-    });
-
-    document.getElementById('play-button').addEventListener('click', () => {
-        if(audioManager.audioElement && audioManager.audioElement.paused) {
-            audioManager.audioElement.play();
-            document.getElementById('overlay').classList.add('hidden');
-        } else if(audioManager.audioElement) {
-            audioManager.audioElement.pause();
-            document.getElementById('overlay').classList.remove('hidden');
-        }
-    });
-
-    document.getElementById('addFileButton').addEventListener('click', () => document.getElementById('audioFileInput').click());
-    document.getElementById('audioFileInput').addEventListener('change', (e) => {
-        if(e.target.files.length > 0) {
-            audioManager.loadFile(e.target.files[0]);
-            document.getElementById('overlay').classList.add('hidden');
-        }
-    });
-
-    document.getElementById('micButton').addEventListener('click', async () => {
-        await audioManager.loadMicrophone();
-        document.getElementById('overlay').classList.add('hidden');
-    });
-
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.style.display = 'none';
-    document.body.appendChild(fileInput);
-
-    const imageModes = ['imageJumper', 'imageBounce', 'imageRain', 'imageKaleidoscope', 'imagePulse', 'imageOrbit'];
-    document.getElementById('mode-selector').addEventListener('change', (e) => {
-        if(imageModes.includes(e.target.value) && !renderer.customImage) {
-            if(confirm("This mode requires an image. Load one now?")) {
-                fileInput.click();
-            }
-        }
-        renderer.setMode(e.target.value);
-    });
-    
-    fileInput.addEventListener('change', (e) => {
-        if(e.target.files.length) {
-            const img = new Image();
-            img.src = URL.createObjectURL(e.target.files[0]);
-            img.onload = () => { renderer.customImage = img; };
-        }
-    });
-
-    document.getElementById('fullscreenButton').addEventListener('click', () => {
-        const elem = document.getElementById('visualizer-container');
-        if (!document.fullscreenElement) {
-            elem.requestFullscreen().catch(err => {
-                alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-            });
-        } else {
-            document.exitFullscreen();
-        }
-    });
-
-    document.getElementById('recordButton').addEventListener('click', function() {
-        const btn = this;
-        if(btn.textContent === 'Record') {
-            const stream = renderer.canvas.captureStream(30);
-            if(renderer.currentMode.id === 'threeD') {
-               alert("Recording not fully supported in 3D mode via canvas stream.");
-               return;
-            }
-            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
-            recordedChunks = [];
-            mediaRecorder.ondataavailable = e => { if(e.data.size > 0) recordedChunks.push(e.data); };
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.getElementById('downloadLink');
-                a.href = url;
-                a.style.display = 'inline-block';
-            };
-            mediaRecorder.start();
-            btn.textContent = 'Stop Recording';
-            btn.classList.add('stop-recording');
-        } else {
-            mediaRecorder.stop();
-            btn.textContent = 'Record';
-            btn.classList.remove('stop-recording');
-        }
-    });
-
-    document.getElementById('beatThresholdSlider').addEventListener('input', (e) => {
-        audioManager.beatThreshold = parseInt(e.target.value);
-        document.getElementById('beatThresholdValue').textContent = e.target.value;
-    });
-
-    document.getElementById('beatColorPicker').addEventListener('input', (e) => {
-        renderer.beatColor = e.target.value;
-    });
-
-    function startLoop() {
-        function loop() {
-            audioManager.update();
-            renderer.draw();
-            animationFrameId = requestAnimationFrame(loop);
-        }
-        if(animationFrameId) cancelAnimationFrame(animationFrameId);
-        loop();
-    }
+ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+const { width, height } = canvas;
+const usableFreqData = frequencyData.slice(0, Math.min(frequencyData.length, 256));
+const bass = usableFreqData.slice(0, 64).reduce((a, b) => a + b, 0) / 64 / 255;
+const mids = usableFreqData.slice(64, 192).reduce((a, b) => a + b, 0) / 128 / 255;
+const blendedColor = this.renderer.blendColors(this.settings.particleColor, this.renderer.beatColor, beatEffect);
+ctx.shadowBlur = 15 + beatEffect * 20;
+ctx.shadowColor = blendedColor;
+this.particles.forEach(p => {
+const force = bass * 2;
+p.vx += (Math.random() - 0.5) * force * 0.5;
+p.vy += (Math.random() - 0.5) * force * 0.5;
+p.vx *= 0.97;
+p.vy *= 0.97;
+p.x += p.vx;
+p.y += p.vy;
+if (p.x < 0 || p.x > width) { p.vx *= -0.8; p.x = Math.max(0, Math.min(width, p.x)); }
+if (p.y < 0 || p.y > height) { p.vy *= -0.8; p.y = Math.max(0, Math.min(height, p.y)); }
+ctx.beginPath();
+const size = this.settings.particleSize * (1 + beatEffect * 1.5 + mids * 0.5) * (0.5 + p.energy * 0.5);
+ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+ctx.fillStyle = blendedColor;
+ctx.fill();
 });
+ctx.shadowBlur = 0;
+}
+}
+class WaveformMode extends Mode {
+constructor(renderer) {
+super(renderer, 'waveform');
+this.settings = { waveformThickness: 3, waveformColor: '#00ff00' };
+}
+renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
+ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+const { width, height } = canvas;
+const usableTimeData = timeDomainData;
+const sliceWidth = width / usableTimeData.length;
+const blendedColor = this.renderer.blendColors(this.settings.waveformColor, this.renderer.beatColor, beatEffect);
+const usableFreqData = frequencyData.slice(0, Math.min(frequencyData.length, 256));
+const avgAmplitude = usableFreqData.reduce((a, b) => a + b, 0) / usableFreqData.length / 255;
+ctx.lineWidth = this.settings.waveformThickness * (1 + beatEffect * 2);
+ctx.strokeStyle = blendedColor;
+ctx.shadowBlur = 15 + beatEffect * 25 + avgAmplitude * 10;
+ctx.shadowColor = blendedColor;
+ctx.beginPath();
+let x = 0;
+for (let i = 0; i < usableTimeData.length; i++) {
+const v = usableTimeData[i] / 128.0;
+const y = v * height / 2;
+if (i === 0) ctx.moveTo(x, y);
+else ctx.lineTo(x, y);
+x += sliceWidth;
+}
+ctx.lineTo(width, height / 2);
+ctx.stroke();
+ctx.shadowBlur = 0;
+}
+}
+class GalaxyMode extends Mode {
+constructor(renderer) {
+super(renderer, 'galaxy');
+this.settings = { particleCount: 600, particleSize: 2, rotationSpeed: 0.15 };
+this.particles = [];
+}
+init() {
+super.init();
+this.particles = [];
+}
+updateSetting(key, value) {
+super.updateSetting(key, value);
+if (key === 'particleCount') this.init();
+}
+renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
+if (!this.initialized || this.particles.length !== this.settings.particleCount) {
+this.particles = [];
+const { width, height } = canvas;
+const arms = 4;
+const armSpread = 0.6;
+for (let i = 0; i < this.settings.particleCount; i++) {
+const armIndex = Math.floor(i / (this.settings.particleCount / arms));
+const angle = (i % (this.settings.particleCount / arms)) * 2 * Math.PI / (this.settings.particleCount / arms) + armIndex * 2 * Math.PI / arms;
+const distance = Math.pow(Math.random(), 0.7) * Math.min(width, height) * 0.45;
+const spread = (Math.random() - 0.5) * armSpread;
+this.particles.push({angle: angle + spread, distance, size: Math.random() * this.settings.particleSize + 0.3, speed: (1 / (distance + 50)) * this.settings.rotationSpeed * 0.08 + (Math.random() - 0.5) * 0.0001, brightness: 0.3 + Math.random() * 0.7});
+}
+if (canvas === this.renderer.canvas) this.initialized = true;
+}
+const { width, height } = canvas;
+const middleX = width / 2;
+const middleY = height / 2;
+ctx.fillStyle = rgba(0, 0, 0, 0.06);
+ctx.fillRect(0, 0, width, height);
+const usableFreqData = frequencyData.slice(0, Math.min(frequencyData.length, 512));
+const bass = usableFreqData.slice(0, 64).reduce((a, b) => a + b, 0) / 64 / 255;
+const mids = usableFreqData.slice(64, 256).reduce((a, b) => a + b, 0) / 192 / 255;
+const treble = usableFreqData.slice(256).reduce((a, b) => a + b, 0) / (usableFreqData.length - 256) / 255;
+ctx.save();
+ctx.translate(middleX, middleY);
+this.particles.forEach(p => {
+p.angle += p.speed;
+const expansionFactor = 1 + bass * 0.15;
+const x = Math.cos(p.angle) * p.distance * expansionFactor;
+const y = Math.sin(p.angle) * p.distance * expansionFactor;
+const r = Math.floor(100 + treble * 155);
+const g = Math.floor(100 + mids * 155);
+const b = 255;
+const brightness = p.brightness * (0.7 + beatEffect * 0.3);
+const color = rgba(${r * brightness}, ${g * brightness}, ${b * brightness}, ${brightness});
+const size = p.size * (1 + beatEffect * 1.2);
+ctx.shadowBlur = 10;
+ctx.shadowColor = color;
+ctx.beginPath();
+ctx.arc(x, y, size, 0, 2 * Math.PI);
+ctx.fillStyle = color;
+ctx.fill();
+});
+ctx.restore();
+ctx.shadowBlur = 0;
+}
+}
+class RadialMode extends Mode {
+constructor(renderer) {
+super(renderer, 'radial');
+this.settings = { rayCount: 360, innerRadius: 30, radialColor: '#ffff00' };
+}
+renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
+ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+const middleX = canvas.width / 2;
+const middleY = canvas.height / 2;
+const blendedColor = this.renderer.blendColors(this.settings.radialColor, this.renderer.beatColor, beatEffect);
+const rayCount = this.settings.rayCount;
+const usableFreqData = frequencyData.slice(0, Math.min(frequencyData.length, 370));
+const freqStep = usableFreqData.length / rayCount;
+const scaledInnerRadius = this.settings.innerRadius * (Math.min(canvas.width, canvas.height) / 500);
+const maxRadius = Math.min(canvas.width, canvas.height) / 2;
+ctx.shadowBlur = 12 + beatEffect * 20;
+ctx.shadowColor = blendedColor;
+for (let i = 0; i < rayCount; i++) {
+const freqIndex = Math.floor(i * freqStep);
+const amplitude = usableFreqData[freqIndex] || 0;
+const rayLength = scaledInnerRadius + (amplitude / 255) * (maxRadius - scaledInnerRadius) * (1 + beatEffect * 0.6);
+const angle = (i / rayCount) * Math.PI * 2;
+const gradient = ctx.createLinearGradient(middleX, middleY, middleX + rayLength * Math.cos(angle), middleY + rayLength * Math.sin(angle));
+gradient.addColorStop(0, blendedColor + 'AA');
+gradient.addColorStop(1, blendedColor + '00');
+ctx.strokeStyle = gradient;
+ctx.lineWidth = 2 * (1 + beatEffect * 0.5);
+ctx.beginPath();
+ctx.moveTo(middleX, middleY);
+ctx.lineTo(middleX + rayLength * Math.cos(angle), middleY + rayLength * Math.sin(angle));
+ctx.stroke();
+}
+ctx.shadowBlur = 0;
+}
+}
+class DNAMode extends Mode {
+constructor(renderer) {
+super(renderer, 'dna');
+this.settings = { segmentCount: 100, helixRadius: 80, dnaColor: '#00ffaa' };
+this.offset = 0;
+}
+renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
+ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+const { width, height } = canvas;
+const blendedColor = this.renderer.blendColors(this.settings.dnaColor, this.renderer.beatColor, beatEffect);
+const segmentCount = this.settings.segmentCount;
+const scaledRadius = this.settings.helixRadius * (Math.min(width, height) / 500);
+const segmentHeight = height / segmentCount;
+const usableFreqData = frequencyData.slice(0, Math.min(frequencyData.length, 370));
+const bass = usableFreqData.slice(0, 64).reduce((a, b) => a + b, 0) / 64 / 255;
+const freqStep = usableFreqData.length / segmentCount;
+ctx.shadowBlur = 10 + beatEffect * 15;
+ctx.shadowColor = blendedColor;
+ctx.lineWidth = 2 + beatEffect * 2;
+this.offset += 0.05 + bass * 0.1;
+for (let strand = 0; strand < 2; strand++) {
+ctx.beginPath();
+for (let i = 0; i < segmentCount; i++) {
+const y = i * segmentHeight;
+const phase = (i / segmentCount) * Math.PI * 4 + this.offset + strand * Math.PI;
+const freqIndex = Math.floor(i * freqStep);
+const amplitude = usableFreqData[freqIndex] || 0;
+const x = width / 2 + Math.sin(phase) * scaledRadius * (1 + amplitude / 255 * 0.3);
+if (i === 0) ctx.moveTo(x, y);
+else ctx.lineTo(x, y);
+}
+ctx.strokeStyle = blendedColor;
+ctx.stroke();
+}
+ctx.lineWidth = 1.5;
+for (let i = 0; i < segmentCount; i += 3) {
+const y = i * segmentHeight;
+const phase1 = (i / segmentCount) * Math.PI * 4 + this.offset;
+const phase2 = phase1 + Math.PI;
+const freqIndex = Math.floor(i * freqStep);
+const amplitude = usableFreqData[freqIndex] || 0;
+const expansionFactor = 1 + amplitude / 255 * 0.3;
+const x1 = width / 2 + Math.sin(phase1) * scaledRadius * expansionFactor;
+const x2 = width / 2 + Math.sin(phase2) * scaledRadius * expansionFactor;
+ctx.beginPath();
+ctx.moveTo(x1, y);
+ctx.lineTo(x2, y);
+ctx.strokeStyle = this.renderer.blendColors(blendedColor, '#ffffff', 0.3);
+ctx.stroke();
+}
+ctx.shadowBlur = 0;
+}
+}
+class ThreeDMode extends Mode {
+constructor(renderer) {
+super(renderer, 'threeD');
+this.settings = { barCount: 128, threeDCameraZ: 500, threeDBarDepth: 50, threeDRotationSpeed: 1, threeDBarColor: '#ff00ff' };
+this.container = renderer.threeJsContainer;
+this.previewContainer = renderer.threeJsPreviewContainer;
+this.isDragging = false;
+this.previousMouseX = 0;
+this.previousMouseY = 0;
+this.onMouseDown = this.onMouseDown.bind(this);
+this.onMouseUp = this.onMouseUp.bind(this);
+this.onMouseMove = this.onMouseMove.bind(this);
+}
+init() {
+super.init();
+this.cleanup(true);
+this.scene = new THREE.Scene();
+this.camera = new THREE.PerspectiveCamera(75, this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
+this.camera.position.z = this.settings.threeDCameraZ;
+this.threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+this.threeRenderer.setSize(this.container.clientWidth, this.container.clientHeight);
+this.threeRenderer.setClearColor(0x000000, 0);
+this.container.appendChild(this.threeRenderer.domElement);
+this.previewCamera = new THREE.PerspectiveCamera(75, this.previewContainer.clientWidth / this.previewContainer.clientHeight, 0.1, 1000);
+this.previewCamera.position.z = this.settings.threeDCameraZ;
+this.previewRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+this.previewRenderer.setSize(this.previewContainer.clientWidth, this.previewContainer.clientHeight);
+this.previewRenderer.setClearColor(0x000000, 0);
+this.previewContainer.appendChild(this.previewRenderer.domElement);
+this.scene.add(new THREE.AmbientLight(0x404040, 2));
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+directionalLight.position.set(0, 1, 1);
+this.scene.add(directionalLight);
+this.bars = [];
+const numBars = this.settings.barCount;
+const spacing = 6;
+const totalWidth = numBars * spacing;
+const startX = -totalWidth / 2;
+for (let i = 0; i < numBars; i++) {
+const geometry = new THREE.BoxGeometry(3, 5, this.settings.threeDBarDepth);
+const material = new THREE.MeshPhongMaterial({ color: this.settings.threeDBarColor, shininess: 100, specular: 0x444444 });
+const bar = new THREE.Mesh(geometry, material);
+bar.position.set(startX + i * spacing, 0, 0);
+this.scene.add(bar);
+this.bars.push(bar);
+}
+this.bindEvents();
+}
+updateSetting(key, value) {
+super.updateSetting(key, value);
+if (key === 'threeDCameraZ') {
+this.camera.position.z = value;
+this.previewCamera.position.z = value;
+}
+if (key === 'barCount' || key === 'threeDBarDepth') this.init();
+}
+bindEvents() {
+this.previewContainer.addEventListener('mousedown', this.onMouseDown);
+window.addEventListener('mouseup', this.onMouseUp);
+window.addEventListener('mousemove', this.onMouseMove);
+}
+cleanup(isReinit = false) {
+if (this.threeRenderer) {
+window.removeEventListener('mouseup', this.onMouseUp);
+window.removeEventListener('mousemove', this.onMouseMove);
+if (this.container.contains(this.threeRenderer.domElement)) this.container.removeChild(this.threeRenderer.domElement);
+this.threeRenderer.dispose();
+}
+if (this.previewRenderer) {
+if (this.previewContainer.contains(this.previewRenderer.domElement)) this.previewContainer.removeChild(this.previewRenderer.domElement);
+this.previewRenderer.dispose();
+}
+if (this.scene) {
+this.scene.traverse(object => {
+if (object.geometry) object.geometry.dispose();
+if (object.material) {
+if (Array.isArray(object.material)) object.material.forEach(m => m.dispose());
+else object.material.dispose();
+}
+});
+}
+if (!isReinit) super.cleanup();
+}
+onMouseDown(event) {
+this.isDragging = true;
+this.previousMouseX = event.clientX;
+this.previousMouseY = event.clientY;
+}
+onMouseUp() { this.isDragging = false; }
+onMouseMove(event) {
+if (!this.isDragging) return;
+const deltaX = event.clientX - this.previousMouseX;
+const deltaY = event.clientY - this.previousMouseY;
+this.scene.rotation.y += deltaX * 0.005;
+this.scene.rotation.x += deltaY * 0.005;
+this.previousMouseX = event.clientX;
+this.previousMouseY = event.clientY;
+}
+draw(frequencyData, timeDomainData, beatEffect) {
+if (!this.initialized) return;
+const numBars = this.settings.barCount;
+const usableFreqData = frequencyData.slice(0, Math.min(frequencyData.length, 1024));
+const freqStep = usableFreqData.length / numBars;
+for (let i = 0; i < numBars; i++) {
+const freqIndex = Math.floor(i * freqStep);
+const amplitude = usableFreqData[freqIndex] || 0;
+const scaleY = Math.max(0.1, 1 + (amplitude / 255) * 6 * (1 + beatEffect * 0.8));
+const blendedColor = this.renderer.blendColors(this.settings.threeDBarColor, this.renderer.beatColor, beatEffect);
+const bar = this.bars[i];
+if (bar) {
+bar.scale.y = scaleY;
+bar.material.color.set(blendedColor);
+bar.material.emissive.set(blendedColor);
+bar.material.emissiveIntensity = beatEffect * 0.3;
+}
+}
+if (!this.isDragging) this.scene.rotation.y += (this.settings.threeDRotationSpeed / 1000);
+this.threeRenderer.render(this.scene, this.camera);
+this.previewRenderer.render(this.scene, this.previewCamera);
+}
+onResize(width, height) {
+if (!this.initialized || !this.camera || !this.threeRenderer) return;
+this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+this.camera.updateProjectionMatrix();
+this.threeRenderer.setSize(this.container.clientWidth, this.container.clientHeight);
+this.previewCamera.aspect = this.previewContainer.clientWidth / this.previewContainer.clientHeight;
+this.previewCamera.updateProjectionMatrix();
+this.previewRenderer.setSize(this.previewContainer.clientWidth, this.previewContainer.clientHeight);
+}
+}
+class ImageJumperMode extends Mode {
+constructor(renderer) {
+super(renderer, 'imageJumper');
+this.settings = { imageSize: 150, jumpIntensity: 80, rotationSpeed: 0.5 };
+this.image = null;
+this.jumpOffset = 0;
+this.rotation = 0;
+}
+setImage(src) {
+this.image = new Image();
+this.image.onload = () => this.initialized = true;
+this.image.src = src;
+}
+renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
+if (!this.image || !this.image.complete) return;
+ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+const middleX = canvas.width / 2;
+const middleY = canvas.height / 2;
+const jump = this.jumpOffset + beatEffect * this.settings.jumpIntensity;
+const yPos = middleY - jump;
+this.rotation += this.settings.rotationSpeed * 0.01;
+const scale = 1 + beatEffect * 0.3;
+const size = this.settings.imageSize * scale;
+ctx.save();
+ctx.translate(middleX, yPos);
+ctx.rotate(this.rotation);
+ctx.drawImage(this.image, -size/2, -size/2, size, size);
+ctx.restore();
+this.jumpOffset *= 0.9;
+if (beatEffect > 0.1) this.jumpOffset = this.settings.jumpIntensity * 0.5;
+}
+}
+class ImageBounceMode extends Mode {
+constructor(renderer) {
+super(renderer, 'imageBounce');
+this.settings = { imageSize: 100, bounceSpeed: 2, rotationOnBounce: 30, gravity: 0.5 };
+this.image = null;
+this.x = 0;
+this.y = 0;
+this.vx = 2;
+this.vy = 2;
+this.rotation = 0;
+this.targetRotation = 0;
+}
+setImage(src) {
+this.image = new Image();
+this.image.onload = () => {
+this.x = Math.random() * (this.renderer.canvas.width - this.settings.imageSize);
+this.y = Math.random() * (this.renderer.canvas.height - this.settings.imageSize);
+this.initialized = true;
+};
+this.image.src = src;
+}
+renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
+if (!this.image || !this.image.complete) return;
+ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+const usableFreqData = frequencyData.slice(0, 256);
+const bass = usableFreqData.slice(0, 64).reduce((a, b) => a + b, 0) / 64 / 255;
+this.vy += this.settings.gravity * (0.5 + bass);
+this.x += this.vx * this.settings.bounceSpeed;
+this.y += this.vy * this.settings.bounceSpeed;
+if (this.x <= 0 || this.x + this.settings.imageSize >= canvas.width) {
+this.vx = -this.vx * 0.9;
+this.x = this.x <= 0 ? 0 : canvas.width - this.settings.imageSize;
+this.targetRotation += this.settings.rotationOnBounce;
+}
+if (this.y <= 0 || this.y + this.settings.imageSize >= canvas.height) {
+this.vy = -this.vy * 0.9;
+this.y = this.y <= 0 ? 0 : canvas.height - this.settings.imageSize;
+this.targetRotation += this.settings.rotationOnBounce;
+}
+if (beatEffect > 0.1) {
+this.vx += (Math.random() - 0.5) * 3 * beatEffect;
+this.vy -= 3 * beatEffect;
+}
+this.rotation += (this.targetRotation - this.rotation) * 0.1;
+const scale = 1 + beatEffect * 0.4;
+const size = this.settings.imageSize * scale;
+ctx.save();
+ctx.translate(this.x + size/2, this.y + size/2);
+ctx.rotate(this.rotation * Math.PI / 180);
+ctx.drawImage(this.image, -size/2, -size/2, size, size);
+ctx.restore();
+}
+}
+class ImageRainMode extends Mode {
+constructor(renderer) {
+super(renderer, 'imageRain');
+this.settings = { imageSize: 40, rainCount: 15, fallSpeed: 2 };
+this.image = null;
+this.raindrops = [];
+}
+setImage(src) {
+this.image = new Image();
+this.image.onload = () => {
+this.initRaindrops();
+this.initialized = true;
+};
+this.image.src = src;
+}
+initRaindrops() {
+this.raindrops = [];
+for (let i = 0; i < this.settings.rainCount; i++) {
+this.raindrops.push({
+x: Math.random() * this.renderer.canvas.width,
+y: Math.random() * this.renderer.canvas.height - this.renderer.canvas.height,
+speed: 1 + Math.random() * 2,
+rotation: Math.random() * 360,
+rotationSpeed: (Math.random() - 0.5) * 5
+});
+}
+}
+renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
+if (!this.image || !this.image.complete) return;
+ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+const usableFreqData = frequencyData.slice(0, 256);
+const avgAmplitude = usableFreqData.reduce((a, b) => a + b, 0) / usableFreqData.length / 255;
+this.raindrops.forEach(drop => {
+drop.y += drop.speed * this.settings.fallSpeed * (1 + avgAmplitude);
+drop.rotation += drop.rotationSpeed;
+if (drop.y > canvas.height) {
+drop.y = -this.settings.imageSize;
+drop.x = Math.random() * canvas.width;
+}
+if (beatEffect > 0.1) {drop.x += (Math.random() - 0.5) * 20 * beatEffect;
+        }
+        const scale = 1 + beatEffect * 0.5;
+        const size = this.settings.imageSize * scale;
+        ctx.save();
+        ctx.translate(drop.x, drop.y);
+        ctx.rotate(drop.rotation * Math.PI / 180);
+        ctx.drawImage(this.image, -size/2, -size/2, size, size);
+        ctx.restore();
+    });
+}
+onResize(width, height) {
+    if (this.image && this.initialized) this.initRaindrops();
+}
+    }
+class ImageKaleidoscopeMode extends Mode {
+constructor(renderer) {
+super(renderer, 'imageKaleidoscope');
+this.settings = { imageSize: 80, segments: 8, rotationSpeed: 0.5 };
+this.image = null;
+this.rotation = 0;
+}
+setImage(src) {
+this.image = new Image();
+this.image.onload = () => this.initialized = true;
+this.image.src = src;
+}
+renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
+if (!this.image || !this.image.complete) return;
+ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+const middleX = canvas.width / 2;
+const middleY = canvas.height / 2;
+const usableFreqData = frequencyData.slice(0, 256);
+const avgAmplitude = usableFreqData.reduce((a, b) => a + b, 0) / usableFreqData.length / 255;
+this.rotation += this.settings.rotationSpeed * 0.01 * (1 + avgAmplitude);
+const scale = 1 + beatEffect * 0.4 + avgAmplitude * 0.3;
+const size = this.settings.imageSize * scale;
+ctx.save();
+ctx.translate(middleX, middleY);
+for (let i = 0; i < this.settings.segments; i++) {
+const angle = (i / this.settings.segments) * Math.PI * 2 + this.rotation;
+ctx.save();
+ctx.rotate(angle);
+ctx.translate(size, 0);
+ctx.rotate(this.rotation * 2);
+ctx.drawImage(this.image, -size/2, -size/2, size, size);
+ctx.restore();
+}
+ctx.restore();
+}
+}
+class ImagePulseMode extends Mode {
+constructor(renderer) {
+super(renderer, 'imagePulse');
+this.settings = { imageSize: 60, gridCols: 5, gridRows: 4, pulseIntensity: 0.5 };
+this.image = null;
+this.pulseOffsets = [];
+}
+setImage(src) {
+this.image = new Image();
+this.image.onload = () => {
+this.initGrid();
+this.initialized = true;
+};
+this.image.src = src;
+}
+initGrid() {
+this.pulseOffsets = [];
+for (let i = 0; i < this.settings.gridRows * this.settings.gridCols; i++) {
+this.pulseOffsets.push(Math.random() * Math.PI * 2);
+}
+}
+renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
+if (!this.image || !this.image.complete) return;
+ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+const usableFreqData = frequencyData.slice(0, 256);
+const freqStep = usableFreqData.length / (this.settings.gridRows * this.settings.gridCols);
+const cellWidth = canvas.width / this.settings.gridCols;
+const cellHeight = canvas.height / this.settings.gridRows;
+let index = 0;
+for (let row = 0; row < this.settings.gridRows; row++) {
+for (let col = 0; col < this.settings.gridCols; col++) {
+const x = col * cellWidth + cellWidth / 2;
+const y = row * cellHeight + cellHeight / 2;
+const freqIndex = Math.floor(index * freqStep);
+const amplitude = usableFreqData[freqIndex] || 0;
+const pulse = Math.sin(this.pulseOffsets[index]) * this.settings.pulseIntensity;
+this.pulseOffsets[index] += 0.05 + (amplitude / 255) * 0.1;
+const scale = 1 + pulse + beatEffect * 0.5 + (amplitude / 255) * 0.3;
+const size = this.settings.imageSize * scale;
+const rotation = this.pulseOffsets[index] * 0.5;
+ctx.save();
+ctx.translate(x, y);
+ctx.rotate(rotation);
+ctx.globalAlpha = 0.8 + pulse * 0.2 + beatEffect * 0.2;
+ctx.drawImage(this.image, -size/2, -size/2, size, size);
+ctx.restore();
+index++;
+}
+}
+ctx.globalAlpha = 1;
+}
+onResize(width, height) {
+if (this.image && this.initialized) this.initGrid();
+}
+}
+class ImageOrbitMode extends Mode {
+constructor(renderer) {
+super(renderer, 'imageOrbit');
+this.settings = { imageSize: 70, orbitCount: 6, orbitRadius: 150, orbitSpeed: 1 };
+this.image = null;
+this.orbits = [];
+}
+setImage(src) {
+this.image = new Image();
+this.image.onload = () => {
+this.initOrbits();
+this.initialized = true;
+};
+this.image.src = src;
+}
+initOrbits() {
+this.orbits = [];
+for (let i = 0; i < this.settings.orbitCount; i++) {
+this.orbits.push({
+angle: (i / this.settings.orbitCount) * Math.PI * 2,
+speed: 0.01 * this.settings.orbitSpeed * (0.8 + Math.random() * 0.4),
+radius: this.settings.orbitRadius * (0.7 + Math.random() * 0.6),
+rotation: 0,
+rotationSpeed: (Math.random() - 0.5) * 0.1
+});
+}
+}
+renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
+if (!this.image || !this.image.complete) return;
+ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+const middleX = canvas.width / 2;
+const middleY = canvas.height / 2;
+const usableFreqData = frequencyData.slice(0, 256);
+const bass = usableFreqData.slice(0, 64).reduce((a, b) => a + b, 0) / 64 / 255;
+this.orbits.forEach((orbit, i) => {
+orbit.angle += orbit.speed * (1 + bass * 0.5);
+orbit.rotation += orbit.rotationSpeed;
+const freqIndex = Math.floor((i / this.orbits.length) * usableFreqData.length);
+const amplitude = usableFreqData[freqIndex] || 0;
+const radiusModifier = 1 + (amplitude / 255) * 0.3 + beatEffect * 0.4;
+const x = middleX + Math.cos(orbit.angle) * orbit.radius * radiusModifier;
+const y = middleY + Math.sin(orbit.angle) * orbit.radius * radiusModifier;
+const scale = 1 + beatEffect * 0.5 + (amplitude / 255) * 0.3;
+const size = this.settings.imageSize * scale;
+ctx.save();
+ctx.translate(x, y);
+ctx.rotate(orbit.rotation);
+ctx.drawImage(this.image, -size/2, -size/2, size, size);
+ctx.restore();
+});
+}
+onResize(width, height) {
+if (this.image && this.initialized) this.initOrbits();
+}
+}
+class UIManager {
+constructor(app) {
+this.app = app;
+this.dom = {
+playButton: document.getElementById('play-button'),
+overlay: document.getElementById('overlay'),
+addFileButton: document.getElementById('addFileButton'),
+micButton: document.getElementById('micButton'),
+recordButton: document.getElementById('recordButton'),
+downloadLink: document.getElementById('downloadLink'),
+fullscreenButton: document.getElementById('fullscreenButton'),
+logoutButton: document.getElementById('logoutButton'),
+audioFileInput: document.getElementById('audioFileInput'),
+imageFileInput: document.getElementById('imageFileInput'),
+modeSelector: document.getElementById('mode-selector'),
+modeSettings: document.getElementById('mode-settings'),
+beatThresholdSlider: document.getElementById('beatThresholdSlider'),
+beatThresholdValue: document.getElementById('beatThresholdValue'),
+beatColorPicker: document.getElementById('beatColorPicker'),
+};
+this.modeSettingsHTML = {
+circular: <details open><summary>Circular Settings</summary><div class="control-group-grid"><div class="control-group"><label for="barCountSlider">Bar Count: <span id="barCountValue">256</span></label><input type="range" id="barCountSlider" min="64" max="512" value="256" step="2"></div><div class="control-group"><label for="radiusSlider">Base Radius: <span id="radiusValue">100</span></label><input type="range" id="radiusSlider" min="50" max="300" value="100"></div><div class="control-group"><label for="lineWidthSlider">Line Width: <span id="lineWidthValue">3</span></label><input type="range" id="lineWidthSlider" min="1" max="10" value="3"></div><div class="control-group"><label for="lineColorPicker">Line Color:</label><input type="color" id="lineColorPicker" value="#00ffff"></div></div></details>,
+linear: <details open><summary>Linear Settings</summary><div class="control-group-grid"><div class="control-group"><label for="barCountSlider">Bar Count: <span id="barCountValue">256</span></label><input type="range" id="barCountSlider" min="64" max="512" value="256" step="2"></div><div class="control-group"><label for="barHeightSlider">Min Bar Height: <span id="barHeightValue">2</span></label><input type="range" id="barHeightSlider" min="1" max="20" value="2"></div><div class="control-group"><label for="barSpacingSlider">Bar Spacing: <span id="barSpacingValue">1</span></label><input type="range" id="barSpacingSlider" min="0" max="10" value="1"></div><div class="control-group"><label for="barColorPicker">Bar Color:</label><input type="color" id="barColorPicker" value="#00ff88"></div></div></details>,
+particle: <details open><summary>Particle Settings</summary><div class="control-group-grid"><div class="control-group"><label for="particleCountSlider">Particle Count: <span id="particleCountValue">400</span></label><input type="range" id="particleCountSlider" min="50" max="1000" value="400"></div><div class="control-group"><label for="particleSizeSlider">Particle Size: <span id="particleSizeValue">3</span></label><input type="range" id="particleSizeSlider" min="1" max="10" value="3"></div><div class="control-group"><label for="particleColorPicker">Particle Color:</label><input type="color" id="particleColorPicker" value="#00ffff"></div></div></details>,
+waveform: <details open><summary>Waveform Settings</summary><div class="control-group-grid"><div class="control-group"><label for="waveformThicknessSlider">Line Thickness: <span id="waveformThicknessValue">3</span></label><input type="range" id="waveformThicknessSlider" min="1" max="10" value="3"></div><div class="control-group"><label for="waveformColorPicker">Waveform Color:</label><input type="color" id="waveformColorPicker" value="#00ff00"></div></div></details>,
+galaxy: <details open><summary>Galaxy Settings</summary><div class="control-group-grid"><div class="control-group"><label for="particleCountSlider">Star Count: <span id="particleCountValue">600</span></label><input type="range" id="particleCountSlider" min="100" max="2000" value="600"></div><div class="control-group"><label for="particleSizeSlider">Star Size: <span id="particleSizeValue">2</span></label><input type="range" id="particleSizeSlider" min="0.5" max="5" value="2" step="0.1"></div><div class="control-group"><label for="rotationSpeedSlider">Rotation Speed: <span id="rotationSpeedValue">0.15</span></label><input type="range" id="rotationSpeedSlider" min="0" max="1" value="0.15" step="0.01"></div></div></details>,
+threeD: <details open><summary>3D Settings</summary><div class="control-group-grid"><div class="control-group"><label for="barCountSlider">Bar Count: <span id="barCountValue">128</span></label><input type="range" id="barCountSlider" min="32" max="256" value="128" step="2"></div><div class="control-group"><label for="threeDCameraZSlider">Camera Distance: <span id="threeDCameraZValue">500</span></label><input type="range" id="threeDCameraZSlider" min="100" max="1000" value="500"></div><div class="control-group"><label for="threeDBarDepthSlider">Bar Depth: <span id="threeDBarDepthValue">50</span></label><input type="range" id="threeDBarDepthSlider" min="10" max="100" value="50"></div><div class="control-group"><label for="threeDRotationSpeedSlider">Auto-Rotate: <span id="threeDRotationSpeedValue">1</span></label><input type="range" id="threeDRotationSpeedSlider" min="0" max="10" value="1" step="0.1"></div><div class="control-group"><label for="threeDBarColorPicker">Bar Color:</label><input type="color" id="threeDBarColorPicker" value="#ff00ff"></div></div></details>,
+reflected: <details open><summary>Reflected Settings</summary><div class="control-group-grid"><div class="control-group"><label for="barCountSlider">Bar Count: <span id="barCountValue">256</span></label><input type="range" id="barCountSlider" min="64" max="512" value="256" step="2"></div><div class="control-group"><label for="barHeightSlider">Min Bar Height: <span id="barHeightValue">2</span></label><input type="range" id="barHeightSlider" min="1" max="20" value="2"></div><div class="control-group"><label for="barSpacingSlider">Bar Spacing: <span id="barSpacingValue">1</span></label><input type="range" id="barSpacingSlider" min="0" max="10" value="1"></div><div class="control-group"><label for="barColorPicker">Bar Color:</label><input type="color" id="barColorPicker" value="#ff6600"></div></div></details>,
+flower: <details open><summary>Flower Settings</summary><div class="control-group-grid"><div class="control-group"><label for="petalCountSlider">Petal Count: <span id="petalCountValue">16</span></label><input type="range" id="petalCountSlider" min="4" max="48" value="16" step="2"></div><div class="control-group"><label for="radiusSlider">Base Radius: <span id="radiusValue">80</span></label><input type="range" id="radiusSlider" min="20" max="200" value="80"></div><div class="control-group"><label for="lineWidthSlider">Line Width: <span id="lineWidthValue">2</span></label><input type="range" id="lineWidthSlider" min="1" max="10" value="2"></div><div class="control-group"><label for="petalColorPicker">Petal Color:</label><input type="color" id="petalColorPicker" value="#ff80ff"></div></div></details>,
+radial: <details open><summary>Radial Burst Settings</summary><div class="control-group-grid"><div class="control-group"><label for="rayCountSlider">Ray Count: <span id="rayCountValue">360</span></label><input type="range" id="rayCountSlider" min="180" max="720" value="360" step="10"></div><div class="control-group"><label for="innerRadiusSlider">Inner Radius: <span id="innerRadiusValue">30</span></label><input type="range" id="innerRadiusSlider" min="10" max="100" value="30"></div><div class="control-group"><label for="radialColorPicker">Ray Color:</label><input type="color" id="radialColorPicker" value="#ffff00"></div></div></details>,
+dna: <details open><summary>DNA Helix Settings</summary><div class="control-group-grid"><div class="control-group"><label for="segmentCountSlider">Segments: <span id="segmentCountValue">100</span></label><input type="range" id="segmentCountSlider" min="50" max="200" value="100"></div><div class="control-group"><label for="helixRadiusSlider">Helix Radius: <span id="helixRadiusValue">80</span></label><input type="range" id="helixRadiusSlider" min="30" max="150" value="80"></div><div class="control-group"><label for="dnaColorPicker">Strand Color:</label><input type="color" id="dnaColorPicker" value="#00ffaa"></div></div></details>,
+imageJumper: <details open><summary>Image Jumper Settings</summary><div class="control-group-grid"><div class="control-group"><label for="imageUploadButton">Upload Image:</label><button id="imageUploadButton" class="button">Select Image</button></div><div class="control-group"><label for="imageSizeSlider">Image Size: <span id="imageSizeValue">150</span></label><input type="range" id="imageSizeSlider" min="50" max="400" value="150"></div><div class="control-group"><label for="jumpIntensitySlider">Jump Intensity: <span id="jumpIntensityValue">80</span></label><input type="range" id="jumpIntensitySlider" min="10" max="200" value="80"></div><div class="control-group"><label for="rotationSpeedSlider">Rotation Speed: <span id="rotationSpeedValue">0.5</span></label><input type="range" id="rotationSpeedSlider" min="0" max="2" value="0.5" step="0.1"></div></div></details>,
+imageBounce: <details open><summary>Image Bounce Settings</summary><div class="control-group-grid"><div class="control-group"><label for="imageUploadButton">Upload Image:</label><button id="imageUploadButton" class="button">Select Image</button></div><div class="control-group"><label for="imageSizeSlider">Image Size: <span id="imageSizeValue">100</span></label><input type="range" id="imageSizeSlider" min="30" max="300" value="100"></div><div class="control-group"><label for="bounceSpeedSlider">Speed: <span id="bounceSpeedValue">2</span></label><input type="range" id="bounceSpeedSlider" min="0.5" max="5" value="2" step="0.1"></div><div class="control-group"><label for="rotationOnBounceSlider">Rotation On Bounce: <span id="rotationOnBounceValue">30</span></label><input type="range" id="rotationOnBounceSlider" min="0" max="180" value="30"></div><div class="control-group"><label for="gravitySlider">Gravity: <span id="gravityValue">0.5</span></label><input type="range" id="gravitySlider" min="0" max="2" value="0.5" step="0.1"></div></div></details>,
+imageRain: <details open><summary>Image Rain Settings</summary><div class="control-group-grid"><div class="control-group"><label for="imageUploadButton">Upload Image:</label><button id="imageUploadButton" class="button">Select Image</button></div><div class="control-group"><label for="imageSizeSlider">Image Size: <span id="imageSizeValue">40</span></label><input type="range" id="imageSizeSlider" min="20" max="100" value="40"></div><div class="control-group"><label for="rainCountSlider">Rain Count: <span id="rainCountValue">15</span></label><input type="range" id="rainCountSlider" min="5" max="50" value="15"></div><div class="control-group"><label for="fallSpeedSlider">Fall Speed: <span id="fallSpeedValue">2</span></label><input type="range" id="fallSpeedSlider" min="0.5" max="5" value="2" step="0.1"></div></div></details>,
+imageKaleidoscope: <details open><summary>Image Kaleidoscope Settings</summary><div class="control-group-grid"><div class="control-group"><label for="imageUploadButton">Upload Image:</label><button id="imageUploadButton" class="button">Select Image</button></div><div class="control-group"><label for="imageSizeSlider">Image Size: <span id="imageSizeValue">80</span></label><input type="range" id="imageSizeSlider" min="30" max="200" value="80"></div><div class="control-group"><label for="segmentsSlider">Segments: <span id="segmentsValue">8</span></label><input type="range" id="segmentsSlider" min="3" max="16" value="8"></div><div class="control-group"><label for="rotationSpeedSlider">Rotation Speed: <span id="rotationSpeedValue">0.5</span></label><input type="range" id="rotationSpeedSlider" min="0" max="2" value="0.5" step="0.1"></div></div></details>,
+imagePulse: <details open><summary>Image Pulse Grid Settings</summary><div class="control-group-grid"><div class="control-group"><label for="imageUploadButton">Upload Image:</label><button id="imageUploadButton" class="button">Select Image</button></div><div class="control-group"><label for="imageSizeSlider">Image Size: <span id="imageSizeValue">60</span></label><input type="range" id="imageSizeSlider" min="20" max="150" value="60"></div><div class="control-group"><label for="gridColsSlider">Grid Columns: <span id="gridColsValue">5</span></label><input type="range" id="gridColsSlider" min="2" max="10" value="5"></div><div class="control-group"><label for="gridRowsSlider">Grid Rows: <span id="gridRowsValue">4</span></label><input type="range" id="gridRowsSlider" min="2" max="8" value="4"></div><div class="control-group"><label for="pulseIntensitySlider">Pulse Intensity: <span id="pulseIntensityValue">0.5</span></label><input type="range" id="pulseIntensitySlider" min="0.1" max="1" value="0.5" step="0.1"></div></div></details>,
+imageOrbit: <details open><summary>Image Orbit Settings</summary><div class="control-group-grid"><div class="control-group"><label for="imageUploadButton">Upload Image:</label><button id="imageUploadButton" class="button">Select Image</button></div><div class="control-group"><label for="imageSizeSlider">Image Size: <span id="imageSizeValue">70</span></label><input type="range" id="imageSizeSlider" min="30" max="150" value="70"></div><div class="control-group"><label for="orbitCountSlider">Orbit Count: <span id="orbitCountValue">6</span></label><input type="range" id="orbitCountSlider" min="2" max="15" value="6"></div><div class="control-group"><label for="orbitRadiusSlider">Orbit Radius: <span id="orbitRadiusValue">150</span></label><input type="range" id="orbitRadiusSlider" min="50" max="300" value="150"></div><div class="control-group"><label for="orbitSpeedSlider">Orbit Speed: <span id="orbitSpeedValue">1</span></label><input type="range" id="orbitSpeedSlider" min="0.1" max="3" value="1" step="0.1"></div></div></details>
+};
+this.bindEvents();
+}
+bindEvents() {
+this.dom.playButton.addEventListener('click', () => this.app.start());
+this.dom.addFileButton.addEventListener('click', () => this.dom.audioFileInput.click());
+this.dom.audioFileInput.addEventListener('change', e => this.app.loadFile(e.target.files[0]));
+this.dom.micButton.addEventListener('click', () => this.app.useMicrophone());
+this.dom.recordButton.addEventListener('click', () => this.app.toggleRecording());
+this.dom.fullscreenButton.addEventListener('click', () => this.toggleFullscreen());
+this.dom.logoutButton.addEventListener('click', () => this.app.authManager.logout());
+this.dom.modeSelector.addEventListener('change', e => {
+if (this.app.renderer && this.app.renderer.modes) this.app.setMode(e.target.value);
+});
+this.dom.beatThresholdSlider.addEventListener('input', e => {
+if (this.app.audioManager) {
+this.app.audioManager.beatThreshold = parseInt(e.target.value);
+this.dom.beatThresholdValue.textContent = e.target.value;
+}
+});
+this.dom.beatColorPicker.addEventListener('input', e => {
+if (this.app.renderer) this.app.renderer.beatColor = e.target.value;
+});
+}
+updateModeSettings(mode) {
+if (!this.app.renderer || !this.app.renderer.modes) {
+setTimeout(() => this.updateModeSettings(mode), 100);
+return;
+}
+this.dom.modeSettings.innerHTML = this.modeSettingsHTML[mode] || '';
+this.bindModeSpecificEvents(mode);
+}
+bindModeSpecificEvents(mode) {
+if (!this.app.renderer || !this.app.renderer.modes) return;
+const modeInstance = this.app.renderer.modes[mode];
+if (!modeInstance) return;
+const settings = modeInstance.settings;
+for (const key in settings) {
+const elementId = this.getControlId(key, settings[key]);
+const element = document.getElementById(elementId);
+if (element) {
+const valueSpan = document.getElementById(${key}Value);
+element.addEventListener('input', (e) => {
+const value = e.target.type === 'color' ? e.target.value : e.target.type === 'checkbox' ? e.target.checked : parseFloat(e.target.value);
+modeInstance.updateSetting(key, value);
+if (valueSpan) valueSpan.textContent = value;
+});
+}
+}
+const imageModes = ['imageJumper', 'imageBounce', 'imageRain', 'imageKaleidoscope', 'imagePulse', 'imageOrbit'];
+if (imageModes.includes(mode)) {
+const uploadBtn = document.getElementById('imageUploadButton');
+if (uploadBtn) {
+uploadBtn.addEventListener('click', () => this.dom.imageFileInput.click());
+this.dom.imageFileInput.onchange = null;
+this.dom.imageFileInput.addEventListener('change', (e) => {
+const file = e.target.files[0];
+if (file) {
+const reader = new FileReader();
+reader.onload = (event) => {
+modeInstance.setImage(event.target.result);
+};
+reader.readAsDataURL(file);
+}
+});
+}
+}
+}
+getControlId(key, value) {
+if (typeof value === 'boolean') return ${key}Checkbox;
+return typeof value === 'string' && value.startsWith('#') ? ${key}Picker : ${key}Slider;
+}
+toggleFullscreen() {
+const elem = document.querySelector("#visualizer-container");
+if (!document.fullscreenElement) {
+elem.requestFullscreen().catch(err => {
+alert(Error enabling fullscreen: ${err.message});
+});
+} else {
+document.exitFullscreen();
+}
+}
+updateRecordButton(isRecording) {
+if (this.dom.recordButton) {
+if (isRecording) {
+this.dom.recordButton.textContent = '■ Stop Recording';
+this.dom.recordButton.classList.add('stop-recording');
+} else {
+this.dom.recordButton.textContent = '● Record';
+this.dom.recordButton.classList.remove('stop-recording');
+}
+}
+}
+showVisualizer() {
+const loginOverlay = document.getElementById('login-overlay');
+const mainContent = document.getElementById('main-content');
+const footer = document.getElementById('footer');
+const adminPanel = document.getElementById('adminPanel');
+if (loginOverlay) loginOverlay.style.display = 'none';
+if (mainContent) mainContent.style.display = 'flex';
+if (footer) footer.style.display = 'block';
+const session = this.app.authManager.getSession();
+if (session && session.isAdmin) {
+if (adminPanel) adminPanel.style.display = 'block';
+} else {
+if (adminPanel) adminPanel.style.display = 'none';
+}
+if (session && session.key) {
+const currentKeyDisplay = document.getElementById('currentKeyDisplay');
