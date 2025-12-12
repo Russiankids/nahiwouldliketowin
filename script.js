@@ -524,62 +524,6 @@ class ReflectedMode extends Mode {
         ctx.shadowBlur = 0;
     }
 }
-
-class FlowerMode extends Mode {
-    constructor(renderer) {
-        super(renderer, 'flower');
-        this.settings = { petalCount: 16, radius: 80, lineWidth: 2, petalColor: '#ff80ff' };
-    }
-    renderOn(canvas, ctx, frequencyData, timeDomainData, beatEffect) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        const middleX = canvas.width / 2;
-        const middleY = canvas.height / 2;
-        const blendedColor = this.renderer.blendColors(this.settings.petalColor, this.renderer.beatColor, beatEffect);
-        const petalCount = this.settings.petalCount;
-        const usableFreqData = frequencyData.slice(0, Math.min(frequencyData.length, 370));
-        const freqStep = usableFreqData.length / petalCount;
-        const scaledRadius = this.settings.radius * (Math.min(canvas.width, canvas.height) / 500);
-        ctx.strokeStyle = blendedColor;
-        ctx.fillStyle = blendedColor + '40';
-        ctx.lineWidth = this.settings.lineWidth * (1 + beatEffect * 0.5);
-        ctx.shadowBlur = 12 + beatEffect * 18;
-        ctx.shadowColor = blendedColor;
-        for (let i = 0; i < petalCount; i++) {
-            const freqIndex = Math.floor(i * freqStep);
-            const amplitude = usableFreqData[freqIndex] || 0;
-            const petalLength = (20 + amplitude * 0.8) * (Math.min(canvas.width, canvas.height) / 500) * (1 + beatEffect * 0.6);
-            const angle = (i / petalCount) * Math.PI * 2;
-            this.drawPetal(ctx, middleX, middleY, angle, scaledRadius, petalLength);
-        }
-        ctx.shadowBlur = 0;
-    }
-    drawPetal(ctx, cx, cy, angle, radius, length) {
-        const tipX = cx + (radius + length<function_calls>
-<invoke name="artifacts">
-<parameter name="command">update</parameter>
-<parameter name="id">audio_viz_js</parameter>
-<parameter name="old_str">    drawPetal(ctx, cx, cy, angle, radius, length) {
-const tipX = cx + (radius + length</parameter>
-<parameter name="new_str">    drawPetal(ctx, cx, cy, angle, radius, length) {
-const tipX = cx + (radius + length) * Math.cos(angle);
-const tipY = cy + (radius + length) * Math.sin(angle);
-const anchorX = cx + radius * Math.cos(angle);
-const anchorY = cy + radius * Math.sin(angle);
-const controlAngleOffset = 0.3 / (length / 250);
-const controlDist = radius + length / 1.5;
-const cp1x = cx + controlDist * Math.cos(angle - controlAngleOffset);
-const cp1y = cy + controlDist * Math.sin(angle - controlAngleOffset);
-const cp2x = cx + controlDist * Math.cos(angle + controlAngleOffset);
-const cp2y = cy + controlDist * Math.sin(angle + controlAngleOffset);
-ctx.beginPath();
-ctx.moveTo(anchorX, anchorY);
-ctx.quadraticCurveTo(cp1x, cp1y, tipX, tipY);
-ctx.quadraticCurveTo(cp2x, cp2y, anchorX, anchorY);
-ctx.fill();
-ctx.stroke();
-}
-}
 class ParticleMode extends Mode {
 constructor(renderer) {
 super(renderer, 'particle');
